@@ -19,6 +19,50 @@ import Link from 'next/link';
 
 export default function WireRecordsPage() {
     const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState('');
+    const [dateRange, setDateRange] = React.useState({ start: '', end: '' });
+    const [sectionFilter, setSectionFilter] = React.useState('');
+    const [showFilters, setShowFilters] = React.useState(false);
+
+    const filteredRecords = wireRecords.filter(record => {
+        const textToSearch = `${record.machineName} ${record.wireType} ${record.partyName || ''} ${record.remark || ''}`.toLowerCase();
+        if (searchTerm && !textToSearch.includes(searchTerm.toLowerCase())) return false;
+        if (sectionFilter && record.machineName !== sectionFilter) return false;
+        if (dateRange.start && new Date(record.changeDate) < new Date(dateRange.start)) return false;
+        if (dateRange.end && new Date(record.changeDate) > new Date(dateRange.end)) return false;
+        return true;
+    });
+
+    const handleExport = () => {
+        const headers = ['ID', 'Machine Section', 'Wire Type', 'Party', 'Install (MT)', 'Removal (MT)', 'Life (MT)', 'Date', 'Remark'];
+        const csvContent = [
+            headers.join(','),
+            ...filteredRecords.map(row => {
+                const lifeMT = row.wireLifeMT || (row.productionAtRemoval ? row.productionAtRemoval - row.productionAtInstallation : '-');
+                return [
+                    `RE_0${row.id}`,
+                    `"${row.machineName}"`,
+                    `"${row.wireType}"`,
+                    `"${row.partyName || '-'}"`,
+                    row.productionAtInstallation,
+                    row.productionAtRemoval || '-',
+                    lifeMT,
+                    row.changeDate,
+                    `"${row.remark || ''}"`
+                ].join(',');
+            })
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `wire_records_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {/* Module Protocol Header */}
@@ -41,7 +85,7 @@ export default function WireRecordsPage() {
                         <Plus size={16} />
                         <span>ADD NEW ENTRY</span>
                     </button>
-                    <button className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center">
+                    <button onClick={handleExport} className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center">
                         <Download size={18} />
                     </button>
                 </div>
@@ -50,7 +94,7 @@ export default function WireRecordsPage() {
             {/* Calibration Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {[
-                    { label: 'Total Records', value: wireRecords.length, unit: 'LOGS' },
+                    { label: 'Total Records', value: filteredRecords.length, unit: 'LOGS' },
                     { label: 'Last Updated', value: '15.02.26', unit: 'UTC' },
                     { label: 'Next Scheduled', value: '02.03.26', unit: 'EXP', highlight: true },
                     { label: 'System Stability', value: '99.98', unit: '%' },
@@ -67,24 +111,70 @@ export default function WireRecordsPage() {
 
             {/* High-Precision Ledger Table */}
             <div className="technical-panel overflow-hidden">
-                <div className="p-5 border-b border-zinc-200 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/20 backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="relative flex-1 max-w-sm group">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] font-black opacity-30">$</div>
-                        <input
-                            type="text"
-                            placeholder="SEARCH RECORDS..."
-                            className="w-full bg-zinc-100/50 dark:bg-zinc-900/50 border border-transparent focus:border-fuchsia-500/30 rounded-[1px] px-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none transition-all mono"
-                        />
+                <div className="p-5 border-b border-zinc-200 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/20 backdrop-blur-xl flex flex-col gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="relative flex-1 max-w-sm group">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] font-black opacity-30"><Search size={14} /></div>
+                            <input
+                                type="text"
+                                placeholder="SEARCH WIRE NAME OR PARTY..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-zinc-100/50 dark:bg-zinc-900/50 border border-transparent focus:border-fuchsia-500/30 rounded-[1px] px-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none transition-all mono"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={cn(
+                                    "px-4 py-2 border text-[9px] font-black uppercase tracking-widest transition-colors flex items-center gap-2",
+                                    showFilters ? "border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900" : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                )}
+                            >
+                                <Filter size={12} />
+                                {showFilters ? 'Hide Filters' : 'Filters'}
+                            </button>
+                            <div className="h-6 w-px bg-zinc-200 dark:border-zinc-800 hidden sm:block" />
+                            <span className="hidden sm:inline-flex text-[9px] font-black text-emerald-500 uppercase tracking-widest px-2 py-1 bg-emerald-500/5 border border-emerald-500/10">
+                                Connected
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button className="px-4 py-2 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                            Filter
-                        </button>
-                        <div className="h-6 w-px bg-zinc-200 dark:border-zinc-800" />
-                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest px-2 py-1 bg-emerald-500/5 border border-emerald-500/10">
-                            Connected
-                        </span>
-                    </div>
+
+                    {/* Expandable Filters */}
+                    {showFilters && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Section</label>
+                                <select
+                                    value={sectionFilter}
+                                    onChange={(e) => setSectionFilter(e.target.value)}
+                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none"
+                                >
+                                    <option value="">All Sections</option>
+                                    {currentMachineSections.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Start Date</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none mono"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400">End Date</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none mono"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -94,14 +184,23 @@ export default function WireRecordsPage() {
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">ID</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Machine Section</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Wire Type</th>
-                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Production (MT)</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Party</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Install (MT)</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Removal (MT)</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em]">Life (MT)</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Date</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Remark</th>
                                 <th className="px-6 py-4 text-center text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/50 font-medium">
-                            {wireRecords.map((record) => (
+                            {filteredRecords.length === 0 ? (
+                                <tr>
+                                    <td colSpan={10} className="px-6 py-8 text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                                        No matching records found
+                                    </td>
+                                </tr>
+                            ) : filteredRecords.map((record) => (
                                 <tr key={record.id} className="hover:bg-fuchsia-500/5 dark:hover:bg-fuchsia-500/5 transition-colors group">
                                     <td className="px-6 py-4 mono text-[11px] text-zinc-400 dark:text-zinc-600 whitespace-nowrap">
                                         <Link href={`/wire-records/${record.id}`} className="hover:text-fuchsia-600 transition-colors">
@@ -118,8 +217,21 @@ export default function WireRecordsPage() {
                                             {record.wireType.toUpperCase()}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 mono text-[11px] font-black text-zinc-900 dark:text-zinc-300">
-                                        {record.totalProduction.toLocaleString()}
+                                    <td className="px-6 py-4">
+                                        <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest leading-tight">
+                                            {record.partyName}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-zinc-700 dark:text-zinc-400">
+                                        {record.productionAtInstallation.toLocaleString()}
+                                    </td>
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-zinc-700 dark:text-zinc-400">
+                                        {record.productionAtRemoval ? record.productionAtRemoval.toLocaleString() : '-'}
+                                    </td>
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-emerald-600 dark:text-emerald-500">
+                                        {record.wireLifeMT
+                                            ? record.wireLifeMT.toLocaleString()
+                                            : (record.productionAtRemoval ? (record.productionAtRemoval - record.productionAtInstallation).toLocaleString() : '-')}
                                     </td>
                                     <td className="px-6 py-4 mono text-[10px] text-zinc-500 uppercase">
                                         {record.changeDate.replace('-', '.')}
@@ -169,10 +281,22 @@ export default function WireRecordsPage() {
                         placeholder: 'e.g. HEW-200 Primary'
                     },
                     {
-                        label: 'Total Production (MT)',
-                        name: 'totalProduction',
+                        label: 'Party / Vendor Name',
+                        name: 'partyName',
+                        type: 'text',
+                        placeholder: 'e.g. Apex Vendors'
+                    },
+                    {
+                        label: 'Production at Installation (MT)',
+                        name: 'productionAtInstallation',
                         type: 'number',
-                        placeholder: 'Enter cumulative production'
+                        placeholder: 'Enter production at install'
+                    },
+                    {
+                        label: 'Production at Removal (MT)',
+                        name: 'productionAtRemoval',
+                        type: 'number',
+                        placeholder: 'Leave blank if currently active'
                     },
                     {
                         label: 'Change Date',

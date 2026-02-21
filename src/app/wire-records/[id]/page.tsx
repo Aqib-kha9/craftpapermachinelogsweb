@@ -98,10 +98,10 @@ export default function WireRecordDetail() {
                                 </div>
                                 <div>
                                     <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
-                                        <Activity size={10} /> Cumulative_Production
+                                        <Activity size={10} /> Install / Removal
                                     </div>
-                                    <div className="text-2xl font-black text-fuchsia-600 mono uppercase tracking-tight">
-                                        {record.totalProduction.toLocaleString()} <span className="text-xs">MT</span>
+                                    <div className="text-xl font-black text-fuchsia-600 mono uppercase tracking-tight">
+                                        {record.productionAtInstallation.toLocaleString()} <span className="text-zinc-400 mx-1">/</span> {record.productionAtRemoval ? record.productionAtRemoval.toLocaleString() : 'ACTIVE'} <span className="text-[10px] ml-1">MT</span>
                                     </div>
                                 </div>
                             </div>
@@ -109,9 +109,11 @@ export default function WireRecordDetail() {
                             <div className="space-y-8 relative z-10">
                                 <div>
                                     <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
-                                        <Layers size={10} /> Wire_Specification
+                                        <Layers size={10} /> Wire_Specification / Party
                                     </div>
-                                    <div className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{record.wireType}</div>
+                                    <div className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">
+                                        {record.wireType} <span className="text-zinc-400 text-sm mx-1">|</span> {record.partyName || 'N/A'}
+                                    </div>
                                 </div>
                                 <div>
                                     <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
@@ -158,13 +160,17 @@ export default function WireRecordDetail() {
                     </div>
 
                     <div className="technical-panel p-6">
-                        <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Production Impact</div>
+                        <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Calculated Wire Life</div>
                         <div className="flex items-end gap-2">
-                            <div className="text-3xl font-black text-zinc-900 dark:text-white mono">150</div>
-                            <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">MT/Day Base</div>
+                            <div className="text-3xl font-black text-zinc-900 dark:text-white mono">
+                                {record.wireLifeMT
+                                    ? record.wireLifeMT.toLocaleString()
+                                    : (record.productionAtRemoval ? (record.productionAtRemoval - record.productionAtInstallation).toLocaleString() : '-')}
+                            </div>
+                            <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">MT Total</div>
                         </div>
                         <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 mt-6 overflow-hidden">
-                            <div className="w-[85%] h-full bg-fuchsia-600" />
+                            <div className="w-full h-full bg-emerald-500" />
                         </div>
                     </div>
                 </div>

@@ -154,8 +154,18 @@ export default function EquipmentRecordDetail() {
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <span className="text-lg font-black text-zinc-900 dark:text-white mono uppercase">Level_Low</span>
                         </div>
-                        <div className="text-[10px] font-medium text-zinc-400 leading-relaxed uppercase tracking-wider">
+                        <div className="text-[10px] font-medium text-zinc-400 leading-relaxed uppercase tracking-wider mb-6">
                             The change was performed during scheduled maintenance. No unexpected downtime was reported.
+                        </div>
+
+                        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
+                            <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2 mb-2">
+                                <Clock size={12} /> Downtime Recorded
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-black text-amber-600 dark:text-amber-500 mono">{record.downtimeMinutes || 0}</span>
+                                <span className="text-[10px] font-black text-amber-600/50 uppercase tracking-widest">MINUTES</span>
+                            </div>
                         </div>
                     </div>
 

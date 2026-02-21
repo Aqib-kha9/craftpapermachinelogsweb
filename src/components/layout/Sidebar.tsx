@@ -9,7 +9,8 @@ import {
     Layers,
     LayoutDashboard,
     ClipboardList,
-    ChevronRight
+    ChevronRight,
+    PieChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Menu, X } from 'lucide-react';
@@ -24,6 +25,11 @@ const sidebarItems = [
         name: 'Dashboard',
         href: '/',
         icon: LayoutDashboard,
+    },
+    {
+        name: 'Summary Dashboard',
+        href: '/summary',
+        icon: PieChart,
     },
     {
         name: 'Wire Records',

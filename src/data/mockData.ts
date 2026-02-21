@@ -2,7 +2,10 @@ export interface WireRecord {
   id: string;
   machineName: string;
   wireType: string;
-  totalProduction: number;
+  partyName: string;
+  productionAtInstallation: number;
+  productionAtRemoval?: number;
+  wireLifeMT?: number;
   changeDate: string;
   remark?: string;
 }
@@ -11,6 +14,7 @@ export interface EquipmentRecord {
   id: string;
   groupName: string;
   equipmentName: string;
+  downtimeMinutes: number;
   totalProduction: number; // Added to match transcript "production pe change hua"
   changeDate: string;
   productionImpact: 'Yes' | 'No' | 'Remark';
@@ -22,7 +26,10 @@ export const wireRecords: WireRecord[] = [
     id: '1',
     machineName: 'First Press',
     wireType: 'HEW-200 Primary',
-    totalProduction: 12500,
+    partyName: 'Apex Vendors',
+    productionAtInstallation: 12500,
+    productionAtRemoval: 15000,
+    wireLifeMT: 2500,
     changeDate: '2024-02-15',
     remark: 'Standard wear and tear',
   },
@@ -30,7 +37,8 @@ export const wireRecords: WireRecord[] = [
     id: '2',
     machineName: 'Second Press',
     wireType: 'SP-500 Bottom',
-    totalProduction: 15400,
+    partyName: 'Global Wires Ltd',
+    productionAtInstallation: 15400,
     changeDate: '2024-02-10',
     remark: 'Unexpected tear observed',
   },
@@ -38,7 +46,10 @@ export const wireRecords: WireRecord[] = [
     id: '3',
     machineName: 'Bottom Wire',
     wireType: 'BW-900 Ultra',
-    totalProduction: 45000,
+    partyName: 'Apex Vendors',
+    productionAtInstallation: 45000,
+    productionAtRemoval: 55000,
+    wireLifeMT: 10000,
     changeDate: '2024-01-20',
   },
 ];
@@ -48,6 +59,7 @@ export const equipmentRecords: EquipmentRecord[] = [
     id: '1',
     groupName: 'First Press',
     equipmentName: 'Top Roller Bearing',
+    downtimeMinutes: 45,
     totalProduction: 12550,
     changeDate: '2024-02-18',
     productionImpact: 'No',
@@ -57,6 +69,7 @@ export const equipmentRecords: EquipmentRecord[] = [
     id: '2',
     groupName: 'Dryer Section',
     equipmentName: 'Steam Valve V-102',
+    downtimeMinutes: 120,
     totalProduction: 12400,
     changeDate: '2024-02-12',
     productionImpact: 'Yes',
@@ -66,6 +79,7 @@ export const equipmentRecords: EquipmentRecord[] = [
     id: '3',
     groupName: 'Top Buyer',
     equipmentName: 'Main Seal',
+    downtimeMinutes: 0,
     totalProduction: 12000,
     changeDate: '2024-02-05',
     productionImpact: 'Remark',

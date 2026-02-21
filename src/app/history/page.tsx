@@ -16,11 +16,67 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function HistoryPage() {
+    const [searchTerm, setSearchTerm] = React.useState('');
+    const [dateRange, setDateRange] = React.useState({ start: '', end: '' });
+    const [sectionFilter, setSectionFilter] = React.useState('');
+    const [showFilters, setShowFilters] = React.useState(false);
+
     // Merge and sort records by date (descending)
     const combinedHistory = [
-        ...wireRecords.map(r => ({ ...r, type: 'WIRE_CHANGE', zone: r.machineName, detail: r.wireType })),
-        ...equipmentRecords.map(r => ({ ...r, type: 'EQUIPMENT_MAINTENANCE', zone: r.groupName, detail: r.equipmentName }))
+        ...wireRecords.map(r => ({
+            ...r,
+            type: 'WIRE_CHANGE',
+            zone: r.machineName,
+            detail: r.wireType,
+            filterText: `${r.machineName} ${r.wireType} ${r.partyName || ''} ${r.remark || ''}`.toLowerCase(),
+            party: r.partyName,
+            lifeMT: r.wireLifeMT || (r.productionAtRemoval ? r.productionAtRemoval - r.productionAtInstallation : null)
+        })),
+        ...equipmentRecords.map(r => ({
+            ...r,
+            type: 'EQUIPMENT_MAINTENANCE',
+            zone: r.groupName,
+            detail: r.equipmentName,
+            filterText: `${r.groupName} ${r.equipmentName} ${r.remark || ''}`.toLowerCase(),
+            party: null,
+            lifeMT: null
+        }))
     ].sort((a, b) => new Date(b.changeDate).getTime() - new Date(a.changeDate).getTime());
+
+    const allSections = Array.from(new Set(combinedHistory.map(h => h.zone)));
+
+    const filteredHistory = combinedHistory.filter(entry => {
+        if (searchTerm && !entry.filterText.includes(searchTerm.toLowerCase())) return false;
+        if (sectionFilter && entry.zone !== sectionFilter) return false;
+        if (dateRange.start && new Date(entry.changeDate) < new Date(dateRange.start)) return false;
+        if (dateRange.end && new Date(entry.changeDate) > new Date(dateRange.end)) return false;
+        return true;
+    });
+
+    const handleExport = () => {
+        const headers = ['Type', 'Section', 'Description', 'Party', 'Life (MT)', 'Date', 'Remark'];
+        const csvContent = [
+            headers.join(','),
+            ...filteredHistory.map(row => [
+                row.type,
+                `"${row.zone}"`,
+                `"${row.detail}"`,
+                `"${row.party || '-'}"`,
+                row.lifeMT !== null ? row.lifeMT : '-',
+                row.changeDate,
+                `"${row.remark || ''}"`
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `management_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
@@ -41,7 +97,7 @@ export default function HistoryPage() {
                         <div className="text-[8px] uppercase text-zinc-400 font-black tracking-[0.2em] mb-0.5">Database</div>
                         <div className="text-sm font-black text-emerald-500 uppercase mono tracking-tighter">Connected</div>
                     </div>
-                    <button className="btn-premium flex items-center justify-center gap-3 w-full sm:w-auto">
+                    <button onClick={handleExport} className="btn-premium flex items-center justify-center gap-3 w-full sm:w-auto">
                         <Download size={16} />
                         <span>EXPORT HISTORY</span>
                     </button>
@@ -55,7 +111,7 @@ export default function HistoryPage() {
                         <Database size={16} className="text-zinc-300 dark:text-zinc-700" />
                         <span className="text-[8px] font-black tracking-[0.3em] text-zinc-300 dark:text-zinc-800">STATS 01</span>
                     </div>
-                    <div className="text-3xl font-black text-zinc-900 dark:text-white mono mb-1">{combinedHistory.length}</div>
+                    <div className="text-3xl font-black text-zinc-900 dark:text-white mono mb-1">{filteredHistory.length}</div>
                     <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400">Total Records</div>
                 </div>
                 <div className="technical-panel p-6">
@@ -78,20 +134,66 @@ export default function HistoryPage() {
 
             {/* Full Protocol Table */}
             <div className="technical-panel overflow-hidden">
-                <div className="p-5 border-b border-zinc-200 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/20 backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="relative flex-1 max-w-sm group">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] font-black opacity-30">$</div>
-                        <input
-                            type="text"
-                            placeholder="SEARCH HISTORY..."
-                            className="w-full bg-zinc-100/50 dark:bg-zinc-900/50 border border-transparent focus:border-zinc-400 dark:focus:border-zinc-600 rounded-[1px] px-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none transition-all mono"
-                        />
+                <div className="p-5 border-b border-zinc-200 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/20 backdrop-blur-xl flex flex-col gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="relative flex-1 max-w-sm group">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] font-black opacity-30"><Search size={14} /></div>
+                            <input
+                                type="text"
+                                placeholder="SEARCH WIRE/PART NAME OR PARTY..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-zinc-100/50 dark:bg-zinc-900/50 border border-transparent focus:border-zinc-400 dark:focus:border-zinc-600 rounded-[1px] px-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none transition-all mono"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={cn(
+                                    "px-4 py-2 border text-[9px] font-black uppercase tracking-widest transition-colors flex items-center gap-2",
+                                    showFilters ? "border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900" : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                )}
+                            >
+                                <Filter size={12} />
+                                {showFilters ? 'Hide Filters' : 'Filters'}
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button className="px-4 py-2 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                            Filter
-                        </button>
-                    </div>
+
+                    {/* Expandable Filters */}
+                    {showFilters && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Section</label>
+                                <select
+                                    value={sectionFilter}
+                                    onChange={(e) => setSectionFilter(e.target.value)}
+                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none"
+                                >
+                                    <option value="">All Sections</option>
+                                    {allSections.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Start Date</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none mono"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400">End Date</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none mono"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -100,13 +202,21 @@ export default function HistoryPage() {
                             <tr className="bg-zinc-50 dark:bg-zinc-900/30 border-b border-zinc-200 dark:border-zinc-800/50">
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Type</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Section</th>
-                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Description</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Description / Detail</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Party (Wire)</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Life (MT)</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Date</th>
-                                <th className="px-6 py-4 text-center text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Details</th>
+                                <th className="px-6 py-4 text-center text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Logs</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/50 font-medium">
-                            {combinedHistory.map((entry, i) => (
+                            {filteredHistory.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-8 text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                                        No matching records found
+                                    </td>
+                                </tr>
+                            ) : filteredHistory.map((entry, i) => (
                                 <tr key={i} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40 transition-colors group cursor-pointer">
                                     <td className="px-6 py-4">
                                         <div className={cn(
@@ -125,6 +235,14 @@ export default function HistoryPage() {
                                         <div className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest leading-tight">
                                             {entry.detail}
                                         </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-widest">
+                                            {entry.party || '-'}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-emerald-600 dark:text-emerald-500">
+                                        {entry.lifeMT !== null ? entry.lifeMT.toLocaleString() : '-'}
                                     </td>
                                     <td className="px-6 py-4 mono text-[11px] text-zinc-500 dark:text-zinc-600 uppercase">
                                         {entry.changeDate.replace(/-/g, '.')}
