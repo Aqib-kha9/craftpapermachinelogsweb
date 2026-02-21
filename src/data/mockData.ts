@@ -6,9 +6,12 @@ export interface WireRecord {
   productionAtInstallation: number;
   productionAtRemoval?: number;
   wireLifeMT?: number;
+  expectedLifeMT?: number;
   changeDate: string;
   remark?: string;
 }
+
+export const currentMachineTotalProduction = 54500;
 
 export interface EquipmentRecord {
   id: string;
@@ -30,6 +33,7 @@ export const wireRecords: WireRecord[] = [
     productionAtInstallation: 12500,
     productionAtRemoval: 15000,
     wireLifeMT: 2500,
+    expectedLifeMT: 3000,
     changeDate: '2024-02-15',
     remark: 'Standard wear and tear',
   },
@@ -38,18 +42,20 @@ export const wireRecords: WireRecord[] = [
     machineName: 'Second Press',
     wireType: 'SP-500 Bottom',
     partyName: 'Global Wires Ltd',
-    productionAtInstallation: 15400,
+    productionAtInstallation: 45000,
+    expectedLifeMT: 10000,
     changeDate: '2024-02-10',
-    remark: 'Unexpected tear observed',
+    remark: 'Currently active',
   },
   {
     id: '3',
     machineName: 'Bottom Wire',
     wireType: 'BW-900 Ultra',
     partyName: 'Apex Vendors',
-    productionAtInstallation: 45000,
-    productionAtRemoval: 55000,
+    productionAtInstallation: 30000,
+    productionAtRemoval: 40000,
     wireLifeMT: 10000,
+    expectedLifeMT: 10000,
     changeDate: '2024-01-20',
   },
 ];
