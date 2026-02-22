@@ -9,11 +9,35 @@ import {
     ArrowUpRight,
     Activity,
     Database,
-    Shield
+    Shield,
+    RefreshCw
 } from 'lucide-react';
-import { wireRecords, equipmentRecords } from '@/data/mockData';
+import { currentMachineSections } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+
+interface WireRecord {
+    id: string;
+    machineName: string;
+    wireType: string;
+    partyName: string;
+    productionAtInstallation: number;
+    productionAtRemoval: number | null;
+    wireLifeMT: number | null;
+    changeDate: string;
+    remark: string | null;
+}
+
+interface EquipmentRecord {
+    id: string;
+    groupName: string;
+    equipmentName: string;
+    downtimeMinutes: number;
+    totalProduction: number;
+    changeDate: string;
+    productionImpact: 'Yes' | 'No' | 'Remark';
+    remark: string | null;
+}
 
 export default function HistoryPage() {
     const [searchTerm, setSearchTerm] = React.useState('');
@@ -21,25 +45,67 @@ export default function HistoryPage() {
     const [sectionFilter, setSectionFilter] = React.useState('');
     const [showFilters, setShowFilters] = React.useState(false);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const itemsPerPage = 15;
+
+    // DB state
+    const [wireData, setWireData] = React.useState<WireRecord[]>([]);
+    const [equipmentData, setEquipmentData] = React.useState<EquipmentRecord[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    const fetchAllData = async () => {
+        setIsLoading(true);
+        try {
+            // ... dispatch sync for global telemetry
+            document.dispatchEvent(new Event('sync_telemetry'));
+            const [wireRes, equipRes] = await Promise.all([
+                fetch('/api/wire-records'),
+                fetch('/api/equipment-records')
+            ]);
+
+            if (wireRes.ok && equipRes.ok) {
+                const [wires, equips] = await Promise.all([
+                    wireRes.json(),
+                    equipRes.json()
+                ]);
+                setWireData(wires);
+                setEquipmentData(equips);
+            }
+        } catch (error) {
+            console.error("Failed to fetch history data", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchAllData();
+    }, []);
+
     // Merge and sort records by date (descending)
     const combinedHistory = [
-        ...wireRecords.map(r => ({
-            ...r,
+        ...wireData.map(r => ({
+            id: r.id,
             type: 'WIRE_CHANGE',
             zone: r.machineName,
             detail: r.wireType,
             filterText: `${r.machineName} ${r.wireType} ${r.partyName || ''} ${r.remark || ''}`.toLowerCase(),
             party: r.partyName,
-            lifeMT: r.wireLifeMT || (r.productionAtRemoval ? r.productionAtRemoval - r.productionAtInstallation : null)
+            lifeMT: r.wireLifeMT || (r.productionAtRemoval ? r.productionAtRemoval - r.productionAtInstallation : null),
+            changeDate: r.changeDate,
+            remark: r.remark
         })),
-        ...equipmentRecords.map(r => ({
-            ...r,
+        ...equipmentData.map(r => ({
+            id: r.id,
             type: 'EQUIPMENT_MAINTENANCE',
             zone: r.groupName,
             detail: r.equipmentName,
             filterText: `${r.groupName} ${r.equipmentName} ${r.remark || ''}`.toLowerCase(),
             party: null,
-            lifeMT: null
+            lifeMT: null,
+            changeDate: r.changeDate,
+            remark: r.remark
         }))
     ].sort((a, b) => new Date(b.changeDate).getTime() - new Date(a.changeDate).getTime());
 
@@ -52,6 +118,23 @@ export default function HistoryPage() {
         if (dateRange.end && new Date(entry.changeDate) > new Date(dateRange.end)) return false;
         return true;
     });
+
+    const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+    const paginatedHistory = filteredHistory.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Reset pagination when filters change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, sectionFilter, dateRange]);
+
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setSectionFilter('');
+        setDateRange({ start: '', end: '' });
+    };
 
     const handleExport = () => {
         const headers = ['Type', 'Section', 'Description', 'Party', 'Life (MT)', 'Date', 'Remark'];
@@ -85,7 +168,7 @@ export default function HistoryPage() {
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-white animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">System History: Version 4.1</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Incohub History: Version 4.1</span>
                     </div>
                     <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none uppercase">
                         All History
@@ -93,9 +176,18 @@ export default function HistoryPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                    <button
+                        onClick={fetchAllData}
+                        disabled={isLoading}
+                        className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center flex-1 md:flex-none"
+                    >
+                        <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+                    </button>
                     <div className="technical-panel px-6 py-2 flex-1 md:flex-none bg-zinc-50/50 dark:bg-zinc-900/40">
                         <div className="text-[8px] uppercase text-zinc-400 font-black tracking-[0.2em] mb-0.5">Database</div>
-                        <div className="text-sm font-black text-emerald-500 uppercase mono tracking-tighter">Connected</div>
+                        <div className="text-sm font-black text-emerald-500 uppercase mono tracking-tighter">
+                            {isLoading ? 'Syncing...' : 'Connected'}
+                        </div>
                     </div>
                     <button onClick={handleExport} className="btn-premium flex items-center justify-center gap-3 w-full sm:w-auto">
                         <Download size={16} />
@@ -157,6 +249,14 @@ export default function HistoryPage() {
                                 <Filter size={12} />
                                 {showFilters ? 'Hide Filters' : 'Filters'}
                             </button>
+                            {(searchTerm || sectionFilter || dateRange.start || dateRange.end) && (
+                                <button
+                                    onClick={handleClearFilters}
+                                    className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-red-500 transition-colors"
+                                >
+                                    Clear
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -210,13 +310,19 @@ export default function HistoryPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/50 font-medium">
-                            {filteredHistory.length === 0 ? (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-8 text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest animate-pulse">
+                                        Synchronizing Data Registry...
+                                    </td>
+                                </tr>
+                            ) : paginatedHistory.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-8 text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                                         No matching records found
                                     </td>
                                 </tr>
-                            ) : filteredHistory.map((entry, i) => (
+                            ) : paginatedHistory.map((entry, i) => (
                                 <tr key={i} className="hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40 transition-colors group cursor-pointer">
                                     <td className="px-6 py-4">
                                         <div className={cn(
@@ -261,11 +367,35 @@ export default function HistoryPage() {
                     </table>
                 </div>
 
-                {/* Footer Status */}
-                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/20 flex items-center justify-between">
+                {/* Footer Status & Pagination */}
+                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">All records are up to date</span>
+                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+                            Showing {filteredHistory.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredHistory.length)} of {filteredHistory.length} logs
+                        </span>
+                    </div>
+
+                    <div className="flex gap-1.5">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-1 px-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black text-zinc-400 hover:text-zinc-900 dark:hover:text-white uppercase transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            Prev
+                        </button>
+
+                        <div className="flex items-center px-4 text-[10px] font-black text-zinc-900 dark:text-white mono bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            {currentPage} / {Math.max(1, totalPages)}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className="p-1 px-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black text-zinc-400 hover:text-zinc-900 dark:hover:text-white uppercase transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>

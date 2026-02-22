@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Layers,
     Plus,
@@ -9,22 +9,64 @@ import {
     MoreVertical,
     Download,
     Calendar,
-    ClipboardList
+    ClipboardList,
+    RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { wireRecords, currentMachineSections } from '@/data/mockData';
+import { currentMachineSections } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { RecordModal } from '@/components/layout/RecordModal';
 import Link from 'next/link';
 
-export default function WireRecordsPage() {
-    const [isModalOpen, setIsModalOpen] = React.useState(false);
-    const [searchTerm, setSearchTerm] = React.useState('');
-    const [dateRange, setDateRange] = React.useState({ start: '', end: '' });
-    const [sectionFilter, setSectionFilter] = React.useState('');
-    const [showFilters, setShowFilters] = React.useState(false);
+interface WireRecord {
+    id: string;
+    machineName: string;
+    wireType: string;
+    partyName: string;
+    productionAtInstallation: number;
+    productionAtRemoval: number | null;
+    wireLifeMT: number | null;
+    expectedLifeMT: number | null;
+    changeDate: string;
+    remark: string | null;
+}
 
-    const filteredRecords = wireRecords.filter(record => {
+export default function WireRecordsPage() {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [sectionFilter, setSectionFilter] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
+
+    // DB state
+    const [records, setRecords] = useState<WireRecord[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchRecords = async () => {
+        setIsLoading(true);
+        try {
+            document.dispatchEvent(new Event('sync_telemetry'));
+            const res = await fetch('/api/wire-records');
+            if (res.ok) {
+                const data = await res.json();
+                setRecords(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch wire records', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRecords();
+    }, []);
+
+    const filteredRecords = records.filter(record => {
         const textToSearch = `${record.machineName} ${record.wireType} ${record.partyName || ''} ${record.remark || ''}`.toLowerCase();
         if (searchTerm && !textToSearch.includes(searchTerm.toLowerCase())) return false;
         if (sectionFilter && record.machineName !== sectionFilter) return false;
@@ -33,6 +75,17 @@ export default function WireRecordsPage() {
         return true;
     });
 
+    const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+    const paginatedRecords = filteredRecords.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Reset page to 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, sectionFilter, dateRange]);
+
     const handleExport = () => {
         const headers = ['ID', 'Machine Section', 'Wire Type', 'Party', 'Install (MT)', 'Removal (MT)', 'Life (MT)', 'Date', 'Remark'];
         const csvContent = [
@@ -40,7 +93,7 @@ export default function WireRecordsPage() {
             ...filteredRecords.map(row => {
                 const lifeMT = row.wireLifeMT || (row.productionAtRemoval ? row.productionAtRemoval - row.productionAtInstallation : '-');
                 return [
-                    `RE_0${row.id}`,
+                    `RE_0${row.id.substring(0, 4)}`,
                     `"${row.machineName}"`,
                     `"${row.wireType}"`,
                     `"${row.partyName || '-'}"`,
@@ -63,6 +116,30 @@ export default function WireRecordsPage() {
         document.body.removeChild(link);
     };
 
+    const handleAddRecord = async (data: any) => {
+        try {
+            const res = await fetch('/api/wire-records', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    machineName: data.machineName,
+                    wireType: data.wireType,
+                    partyName: data.partyName,
+                    productionAtInstallation: data.productionAtInstallation,
+                    productionAtRemoval: data.productionAtRemoval,
+                    changeDate: data.changeDate,
+                    remark: data.remark || ""
+                })
+            });
+            if (res.ok) {
+                fetchRecords();
+                setIsModalOpen(false);
+            }
+        } catch (error) {
+            console.error('Failed to create record', error);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {/* Module Protocol Header */}
@@ -70,7 +147,7 @@ export default function WireRecordsPage() {
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-600 shadow-[0_0_10px_rgba(192,38,211,0.8)] animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Module 1: Production Records</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Incohub Module 1: Production</span>
                     </div>
                     <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none">
                         WIRE SYSTEMS
@@ -78,6 +155,9 @@ export default function WireRecordsPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button onClick={fetchRecords} disabled={isLoading} className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center">
+                        <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+                    </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="btn-premium flex items-center justify-center gap-3 w-full sm:w-auto"
@@ -94,10 +174,10 @@ export default function WireRecordsPage() {
             {/* Calibration Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {[
-                    { label: 'Total Records', value: filteredRecords.length, unit: 'LOGS' },
-                    { label: 'Last Updated', value: '15.02.26', unit: 'UTC' },
-                    { label: 'Next Scheduled', value: '02.03.26', unit: 'EXP', highlight: true },
-                    { label: 'System Stability', value: '99.98', unit: '%' },
+                    { label: 'Total Records', value: records.length, unit: 'LOGS' },
+                    { label: 'Avg Wire Life', value: records.length > 0 ? Math.round(records.reduce((acc, curr) => acc + (curr.wireLifeMT || 0), 0) / records.filter(r => r.wireLifeMT).length || 1) : 0, unit: 'MT' },
+                    { label: 'Active Wires', value: records.filter(r => !r.productionAtRemoval).length, unit: 'UNITS', highlight: true },
+                    { label: 'System Source', value: isLoading ? 'SYNCING' : 'NEON', unit: 'DB' },
                 ].map((stat, i) => (
                     <div key={i} className="technical-panel p-5 bg-zinc-50/30 dark:bg-zinc-900/10">
                         <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] mb-2">{stat.label}</div>
@@ -136,7 +216,7 @@ export default function WireRecordsPage() {
                             </button>
                             <div className="h-6 w-px bg-zinc-200 dark:border-zinc-800 hidden sm:block" />
                             <span className="hidden sm:inline-flex text-[9px] font-black text-emerald-500 uppercase tracking-widest px-2 py-1 bg-emerald-500/5 border border-emerald-500/10">
-                                Connected
+                                {isLoading ? 'SYNCING...' : 'Connected'}
                             </span>
                         </div>
                     </div>
@@ -194,17 +274,23 @@ export default function WireRecordsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/50 font-medium">
-                            {filteredRecords.length === 0 ? (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={10} className="px-6 py-8 text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest animate-pulse">
+                                        Loading Records...
+                                    </td>
+                                </tr>
+                            ) : paginatedRecords.length === 0 ? (
                                 <tr>
                                     <td colSpan={10} className="px-6 py-8 text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                                         No matching records found
                                     </td>
                                 </tr>
-                            ) : filteredRecords.map((record) => (
+                            ) : paginatedRecords.map((record) => (
                                 <tr key={record.id} className="hover:bg-fuchsia-500/5 dark:hover:bg-fuchsia-500/5 transition-colors group">
                                     <td className="px-6 py-4 mono text-[11px] text-zinc-400 dark:text-zinc-600 whitespace-nowrap">
                                         <Link href={`/wire-records/${record.id}`} className="hover:text-fuchsia-600 transition-colors">
-                                            RE_0{record.id}
+                                            RE_{record.id.substring(0, 4)}
                                         </Link>
                                     </td>
                                     <td className="px-6 py-4">
@@ -234,7 +320,7 @@ export default function WireRecordsPage() {
                                             : (record.productionAtRemoval ? (record.productionAtRemoval - record.productionAtInstallation).toLocaleString() : '-')}
                                     </td>
                                     <td className="px-6 py-4 mono text-[10px] text-zinc-500 uppercase">
-                                        {record.changeDate.replace('-', '.')}
+                                        {record.changeDate.replace(/-/g, '.')}
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest leading-tight line-clamp-1 max-w-[150px]">
@@ -253,11 +339,26 @@ export default function WireRecordsPage() {
                     </table>
                 </div>
 
-                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/20 flex items-center justify-between">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">Page navigation: lines 1 to 80</span>
+                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+                        Showing {filteredRecords.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredRecords.length)} of {filteredRecords.length} records
+                    </span>
                     <div className="flex gap-2">
-                        <button className="p-1 px-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black text-zinc-500 hover:text-zinc-900 dark:hover:text-white uppercase transition-colors">Prev</button>
-                        <button className="p-1 px-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black text-zinc-500 hover:text-zinc-900 dark:hover:text-white uppercase transition-colors">Next</button>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-1 px-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black text-zinc-500 hover:text-zinc-900 dark:hover:text-white uppercase transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            Prev
+                        </button>
+                        <span className="flex items-center px-2 text-[10px] font-black text-zinc-400">
+                            PAGE {currentPage}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className="p-1 px-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-black text-zinc-500 hover:text-zinc-900 dark:hover:text-white uppercase transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>
@@ -310,11 +411,7 @@ export default function WireRecordsPage() {
                         placeholder: 'Optional notes'
                     },
                 ]}
-                onSubmit={(data) => {
-                    console.log('New wire record entries:', data);
-                    setIsModalOpen(false);
-                    // In a real app, this would update database or state
-                }}
+                onSubmit={handleAddRecord}
             />
         </div>
     );

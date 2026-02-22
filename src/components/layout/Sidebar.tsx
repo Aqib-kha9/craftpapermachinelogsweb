@@ -10,7 +10,9 @@ import {
     LayoutDashboard,
     ClipboardList,
     ChevronRight,
-    PieChart
+    PieChart,
+    LogOut,
+    Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Menu, X } from 'lucide-react';
@@ -48,12 +50,20 @@ const sidebarItems = [
         href: '/history',
         icon: History,
     },
+    {
+        name: 'System Vault',
+        href: '/system',
+        icon: Database,
+        description: 'Backup & Recovery Control'
+    },
 ];
 
 import { ThemeToggle } from './ThemeToggle';
+import { useAuth } from '@/context/AuthContext';
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
+    const { logout } = useAuth();
 
     return (
         <>
@@ -76,7 +86,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             <ClipboardList size={20} />
                         </div>
                         <div className="lg:hidden">
-                            <div className="text-[12px] font-black uppercase tracking-widest text-zinc-900 dark:text-white">Craft Paper</div>
+                            <div className="text-[12px] font-black uppercase tracking-widest text-zinc-900 dark:text-white">Incohub</div>
                             <div className="text-[8px] font-bold text-zinc-400 uppercase tracking-tighter">Machine Records</div>
                         </div>
 
@@ -125,13 +135,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <div className="mt-auto pb-8 flex flex-col items-center gap-8 px-6 lg:px-0">
                         <div className="relative h-24 hidden lg:flex items-center">
                             <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-300 dark:text-zinc-700">
-                                CRAFT<span className="text-zinc-500">_PAPER</span>
+                                INCO<span className="text-zinc-500">_HUB</span>
                             </span>
                         </div>
 
                         <div className="w-full lg:w-1.5 h-1 lg:h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
 
-                        <ThemeToggle />
+                        <ThemeToggle minimal />
                     </div>
                 </div>
             </aside>

@@ -55,6 +55,22 @@ body {
   min-height: 100vh;
 }
 
+button, 
+[role="button"],
+.cursor-pointer,
+select,
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+a {
+  cursor: pointer !important;
+}
+
+button:disabled,
+[disabled] {
+  cursor: not-allowed !important;
+}
+
 /* Linear Technical Blueprint Grid */
 body::before {
   content: "";
@@ -116,6 +132,26 @@ body::before {
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     border-radius: 2px; /* Precision corner */
+    cursor: pointer !important;
+  }
+
+  .btn-premium-secondary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 2px;
+    cursor: pointer !important;
   }
 
   .btn-premium:hover {

@@ -3,11 +3,12 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { ClientLayout } from "@/components/layout/ClientLayout";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CraftPaper Machine Parts Record",
+  title: "Incohub Machine Parts Record",
   description: "Maintenance tracking and history record software",
 };
 
@@ -25,9 +26,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ClientLayout>
-            {children}
-          </ClientLayout>
+          <AuthProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -14,6 +14,7 @@ interface RecordModalProps {
         type: 'text' | 'number' | 'date' | 'select' | 'textarea';
         options?: string[];
         placeholder?: string;
+        defaultValue?: any;
     }[];
     onSubmit: (data: any) => void;
 }
@@ -66,9 +67,10 @@ export function RecordModal({ isOpen, onClose, title, fields, onSubmit }: Record
                                     <select
                                         name={field.name}
                                         required
+                                        defaultValue={field.defaultValue || ""}
                                         className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 rounded-[2px] px-4 py-2 text-[11px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-fuchsia-500/50 transition-all appearance-none uppercase tracking-wider"
                                     >
-                                        <option value="" disabled selected>{field.placeholder || `Select ${field.label}`}</option>
+                                        <option value="" disabled>{field.placeholder || `Select ${field.label}`}</option>
                                         {field.options?.map(opt => (
                                             <option key={opt} value={opt}>{opt}</option>
                                         ))}
@@ -77,6 +79,7 @@ export function RecordModal({ isOpen, onClose, title, fields, onSubmit }: Record
                                     <textarea
                                         name={field.name}
                                         placeholder={field.placeholder}
+                                        defaultValue={field.defaultValue}
                                         rows={3}
                                         className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 rounded-[2px] px-4 py-2 text-[11px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-fuchsia-500/50 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700 uppercase tracking-wider"
                                     />
@@ -85,6 +88,7 @@ export function RecordModal({ isOpen, onClose, title, fields, onSubmit }: Record
                                         type={field.type as any}
                                         name={field.name}
                                         placeholder={field.placeholder}
+                                        defaultValue={field.defaultValue}
                                         required
                                         min={field.type === 'number' ? 0 : undefined}
                                         className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 rounded-[2px] px-4 py-2 text-[11px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-fuchsia-500/50 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700 uppercase tracking-wider mono"

@@ -15,7 +15,59 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
+interface WireRecord {
+  id: string;
+  changeDate: string;
+}
+
+interface EquipmentRecord {
+  id: string;
+  changeDate: string;
+}
+
 export default function Dashboard() {
+  const [wireData, setWireData] = React.useState<WireRecord[]>([]);
+  const [equipmentData, setEquipmentData] = React.useState<EquipmentRecord[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  const fetchStats = async () => {
+    setIsLoading(true);
+    try {
+      const [wireRes, equipRes] = await Promise.all([
+        fetch('/api/wire-records'),
+        fetch('/api/equipment-records')
+      ]);
+
+      if (wireRes.ok && equipRes.ok) {
+        const [wires, equips] = await Promise.all([
+          wireRes.json(),
+          equipRes.json()
+        ]);
+        setWireData(wires);
+        setEquipmentData(equips);
+      }
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const totalLogsCount = wireData.length + equipmentData.length;
+
+  const allDates = [
+    ...wireData.map(r => r.changeDate),
+    ...equipmentData.map(r => r.changeDate)
+  ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  const lastUpdate = allDates.length > 0
+    ? allDates[0].replace(/-/g, '.')
+    : '--.--.----';
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
       {/* Top Header */}
@@ -23,7 +75,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1 h-1 rounded-full bg-fuchsia-600 shadow-[0_0_8px_rgba(192,38,211,0.8)]" />
-            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 dark:text-zinc-600">Machine Maintenance Record System</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 dark:text-zinc-600">Incohub Maintenance System</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none">
             DASHBOARD
@@ -114,20 +166,31 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Row */}
-      <div className="py-4 px-6 border border-zinc-200 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="py-4 px-6 border border-zinc-200 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
+        {isLoading && (
+          <div className="absolute inset-x-0 bottom-0 h-[2px] bg-fuchsia-500/20 animate-pulse">
+            <div className="h-full bg-fuchsia-600 w-1/3 animate-[loading_1.5s_infinite_ease-in-out]" />
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Total Logs:</span>
-            <span className="text-[10px] font-black text-zinc-900 dark:text-white mono bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-[1px] border border-zinc-200 dark:border-zinc-700">1,248</span>
+            <span className="text-[10px] font-black text-zinc-900 dark:text-white mono bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-[1px] border border-zinc-200 dark:border-zinc-700">
+              {isLoading ? '...' : totalLogsCount.toLocaleString()}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest sm:block hidden">Last Update:</span>
-            <span className="text-[10px] font-black text-zinc-900 dark:text-white mono sm:block hidden">18.02.2026</span>
+            <span className="text-[10px] font-black text-zinc-900 dark:text-white mono sm:block hidden">
+              {isLoading ? 'SYNCING...' : lastUpdate}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest text-center">System Operational</span>
+          <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", isLoading ? "bg-amber-500" : "bg-emerald-500")} />
+          <span className={cn("text-[9px] font-black uppercase tracking-widest text-center", isLoading ? "text-amber-600 dark:text-amber-500" : "text-emerald-600 dark:text-emerald-500")}>
+            {isLoading ? 'Synchronizing Registry' : 'System Operational'}
+          </span>
         </div>
       </div>
     </div>

@@ -1,14 +1,80 @@
+'use client';
+
 import React from 'react';
-import { Layers, Activity, Clock, FileBarChart, CalendarDays, TrendingUp, AlertTriangle, BarChart2, ShieldAlert } from 'lucide-react';
-import { wireRecords, equipmentRecords, currentMachineTotalProduction } from '@/data/mockData';
+import { Layers, Activity, Clock, FileBarChart, CalendarDays, TrendingUp, AlertTriangle, BarChart2, ShieldAlert, RefreshCw } from 'lucide-react';
+import { currentMachineTotalProduction } from '@/data/mockData';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
+interface WireRecord {
+    id: string;
+    machineName: string;
+    wireType: string;
+    partyName: string;
+    productionAtInstallation: number;
+    productionAtRemoval: number | null;
+    wireLifeMT: number | null;
+    expectedLifeMT: number | null;
+    changeDate: string;
+    remark: string | null;
+}
+
+interface EquipmentRecord {
+    id: string;
+    groupName: string;
+    equipmentName: string;
+    downtimeMinutes: number;
+    totalProduction: number;
+    changeDate: string;
+    productionImpact: 'Yes' | 'No' | 'Remark';
+    remark: string | null;
+}
+
 export default function SummaryPage() {
-    const totalWireChanges = wireRecords.length;
-    const totalEquipmentChanges = equipmentRecords.length;
-    const totalDowntimeMinutes = equipmentRecords.reduce((sum, record) => sum + (record.downtimeMinutes || 0), 0);
-    const completedWires = wireRecords.filter(w => w.wireLifeMT);
+    const [wireData, setWireData] = React.useState<WireRecord[]>([]);
+    const [equipmentData, setEquipmentData] = React.useState<EquipmentRecord[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    const fetchAllData = async () => {
+        setIsLoading(true);
+        try {
+            // ... dispatch sync for global telemetry
+            document.dispatchEvent(new Event('sync_telemetry'));
+            const [wRes, eRes] = await Promise.all([
+                fetch('/api/wire-records'),
+                fetch('/api/equipment-records')
+            ]);
+
+            if (wRes.ok && eRes.ok) {
+                const [wires, equips] = await Promise.all([
+                    wRes.json(),
+                    eRes.json()
+                ]);
+                setWireData(wires);
+                setEquipmentData(equips);
+            }
+        } catch (error) {
+            console.error("Failed to fetch summary data", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchAllData();
+    }, []);
+
+    const totalWireChanges = wireData.length;
+    const totalEquipmentChanges = equipmentData.length;
+    const totalDowntimeMinutes = equipmentData.reduce((sum, record) => sum + (record.downtimeMinutes || 0), 0);
+    const currentProd = Math.max(
+        0,
+        ...wireData.map(w => w.productionAtInstallation),
+        ...wireData.map(w => w.productionAtRemoval || 0),
+        ...equipmentData.map(e => e.totalProduction)
+    );
+
+    const completedWires = wireData.filter(w => w.wireLifeMT);
     const avgWireLife = completedWires.length > 0
         ? Math.round(completedWires.reduce((sum, w) => sum + w.wireLifeMT!, 0) / completedWires.length)
         : 0;
@@ -16,7 +82,7 @@ export default function SummaryPage() {
     const metrics = [
         {
             title: "Total Prod.",
-            value: (currentMachineTotalProduction / 1000).toFixed(1) + 'k',
+            value: currentProd > 1000 ? (currentProd / 1000).toFixed(1) + 'k' : currentProd,
             unit: "MT",
             icon: <Activity size={24} className="text-zinc-300 dark:text-zinc-600 group-hover:text-emerald-500 transition-colors" />,
             colorClass: "text-emerald-500"
@@ -51,18 +117,18 @@ export default function SummaryPage() {
         }
     ];
 
-    const activeWireAlerts = wireRecords
+    const activeWireAlerts = wireData
         .filter(w => !w.wireLifeMT && w.expectedLifeMT)
         .map(w => {
-            const lifeUsed = currentMachineTotalProduction - w.productionAtInstallation;
+            const lifeUsed = currentProd - w.productionAtInstallation;
             const percentUsed = Math.round((lifeUsed / w.expectedLifeMT!) * 100);
             return { ...w, percentUsed };
         })
         .filter(w => w.percentUsed >= 90);
 
-    const downtimeAlerts = equipmentRecords.filter(e => e.downtimeMinutes > 100);
+    const downtimeAlerts = equipmentData.filter(e => e.downtimeMinutes > 100);
 
-    const downtimeEvents = [...equipmentRecords]
+    const downtimeEvents = [...equipmentData]
         .filter(r => r.downtimeMinutes > 0)
         .sort((a, b) => new Date(a.changeDate).getTime() - new Date(b.changeDate).getTime())
         .slice(-10);
@@ -75,7 +141,7 @@ export default function SummaryPage() {
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Executive Dashboard</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Incohub Executive Dashboard</span>
                     </div>
                     <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none uppercase">
                         Monthly Summary
@@ -83,10 +149,17 @@ export default function SummaryPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={fetchAllData}
+                        disabled={isLoading}
+                        className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center flex-1 md:flex-none"
+                    >
+                        <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+                    </button>
                     <div className="technical-panel px-4 py-2 flex items-center gap-3 bg-zinc-50/50 dark:bg-zinc-900/40">
                         <CalendarDays size={14} className="text-zinc-400" />
                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-300">
-                            Current Period
+                            {isLoading ? 'SYNCING_REGISTRY' : 'FEBRUARY 2024'}
                         </span>
                     </div>
                 </div>
@@ -95,7 +168,12 @@ export default function SummaryPage() {
             {/* KPI Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-8">
                 {metrics.map((metric, i) => (
-                    <div key={i} className="technical-panel p-5 bg-white/50 dark:bg-zinc-950/20 backdrop-blur-xl group hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-default flex flex-col justify-between">
+                    <div key={i} className="technical-panel p-5 bg-white/50 dark:bg-zinc-950/20 backdrop-blur-xl group hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-default flex flex-col justify-between overflow-hidden relative">
+                        {isLoading && (
+                            <div className="absolute inset-0 bg-white/40 dark:bg-zinc-950/40 backdrop-blur-[2px] z-10 animate-pulse flex items-center justify-center">
+                                <Activity size={12} className="text-zinc-400 animate-bounce" />
+                            </div>
+                        )}
                         <div className="flex justify-between items-start mb-6">
                             <div className="p-2 bg-zinc-50 dark:bg-zinc-900 rounded-[2px] border border-zinc-100 dark:border-zinc-800/50 group-hover:scale-110 transition-transform">
                                 {metric.icon}
@@ -165,7 +243,7 @@ export default function SummaryPage() {
                         <Activity size={14} className="text-zinc-300 dark:text-zinc-700" />
                     </div>
                     <div className="space-y-4">
-                        {[...wireRecords, ...equipmentRecords]
+                        {[...wireData, ...equipmentData]
                             .sort((a, b) => new Date(b.changeDate).getTime() - new Date(a.changeDate).getTime())
                             .slice(0, 4)
                             .map((record, i) => {
@@ -204,11 +282,12 @@ export default function SummaryPage() {
                         <Layers size={14} className="text-zinc-300 dark:text-zinc-700" />
                     </div>
                     <div className="space-y-4">
-                        {Array.from(new Set([...wireRecords.map(r => r.machineName), ...equipmentRecords.map(r => r.groupName)])).map((section, i) => {
-                            const wireCount = wireRecords.filter(r => r.machineName === section).length;
-                            const eqCount = equipmentRecords.filter(r => r.groupName === section).length;
+                        {Array.from(new Set([...wireData.map(r => r.machineName), ...equipmentData.map(r => r.groupName)])).map((section, i) => {
+                            const wireCount = wireData.filter(r => r.machineName === section).length;
+                            const eqCount = equipmentData.filter(r => r.groupName === section).length;
                             const total = wireCount + eqCount;
-                            const percentage = Math.round((total / (wireRecords.length + equipmentRecords.length)) * 100);
+                            const totalLogs = wireData.length + equipmentData.length;
+                            const percentage = totalLogs > 0 ? Math.round((total / totalLogs) * 100) : 0;
 
                             return (
                                 <div key={i} className="mb-4 last:mb-0">
