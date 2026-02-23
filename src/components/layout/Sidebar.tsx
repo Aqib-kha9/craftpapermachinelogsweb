@@ -34,6 +34,12 @@ const sidebarItems = [
         icon: PieChart,
     },
     {
+        name: 'Stock Records',
+        href: '/stock-history',
+        icon: ClipboardList,
+        description: 'Production & Dispatch Logs'
+    },
+    {
         name: 'Wire Records',
         href: '/wire-records',
         icon: Layers,
@@ -49,6 +55,12 @@ const sidebarItems = [
         name: 'All History',
         href: '/history',
         icon: History,
+    },
+    {
+        name: 'Master Data',
+        href: '/master-data',
+        icon: Database,
+        description: 'Manage System Definitions'
     },
     {
         name: 'System Vault',
@@ -81,7 +93,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             )}>
                 <div className="flex flex-col h-full py-8 gap-8 lg:gap-12">
                     {/* Brand / Logo */}
-                    <div className="flex items-center gap-4 px-6 lg:px-0 lg:justify-center mb-4 lg:mb-0">
+                    <div className="flex items-center gap-4 px-6 lg:px-0 lg:justify-center lg:mb-0">
                         <div className="w-10 h-10 rounded bg-zinc-900 dark:bg-white flex items-center justify-center text-white dark:text-zinc-900 shadow-xl shrink-0">
                             <ClipboardList size={20} />
                         </div>

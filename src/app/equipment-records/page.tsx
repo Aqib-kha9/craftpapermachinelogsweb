@@ -15,10 +15,15 @@ import {
     RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { currentMachineSections, currentEquipmentNames } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { RecordModal } from '@/components/layout/RecordModal';
 import Link from 'next/link';
+
+interface MasterDataItem {
+    category: string;
+    value: string;
+    isActive: boolean;
+}
 
 interface EquipmentRecord {
     id: string;
@@ -45,6 +50,21 @@ export default function EquipmentRecordsPage() {
     // DB state
     const [records, setRecords] = useState<EquipmentRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [masterDataSections, setMasterDataSections] = useState<string[]>([]);
+    const [masterDataEquipment, setMasterDataEquipment] = useState<string[]>([]);
+
+    const fetchMasterData = async () => {
+        try {
+            const res = await fetch('/api/master-data');
+            if (res.ok) {
+                const data: MasterDataItem[] = await res.json();
+                setMasterDataSections(data.filter(item => item.category === 'MACHINE_SECTION' && item.isActive).map(item => item.value));
+                setMasterDataEquipment(data.filter(item => item.category === 'EQUIPMENT_NAME' && item.isActive).map(item => item.value));
+            }
+        } catch (error) {
+            console.error('Failed to fetch master data', error);
+        }
+    };
 
     const fetchRecords = async () => {
         setIsLoading(true);
@@ -64,6 +84,7 @@ export default function EquipmentRecordsPage() {
 
     useEffect(() => {
         fetchRecords();
+        fetchMasterData();
     }, []);
 
     const filteredRecords = records.filter(record => {
@@ -212,7 +233,7 @@ export default function EquipmentRecordsPage() {
                                     className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none"
                                 >
                                     <option value="">All Groups</option>
-                                    {currentMachineSections.map(s => <option key={s} value={s}>{s}</option>)}
+                                    {masterDataSections.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2">
@@ -378,14 +399,14 @@ export default function EquipmentRecordsPage() {
                         label: 'Machine Group / Section',
                         name: 'groupName',
                         type: 'select',
-                        options: currentMachineSections,
+                        options: masterDataSections,
                         placeholder: 'Select Group'
                     },
                     {
                         label: 'Equipment / Part Name',
                         name: 'equipmentName',
                         type: 'select',
-                        options: currentEquipmentNames,
+                        options: masterDataEquipment,
                         placeholder: 'Select Equipment'
                     },
                     {

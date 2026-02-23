@@ -46,3 +46,30 @@ model Notification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model ProductionRecord {
+  id        String   @id @default(uuid())
+  date      String   // Using YYYY-MM-DD format to match existing records
+  amount    Float    // Amount in tons
+  remark    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DispatchRecord {
+  id        String   @id @default(uuid())
+  date      String   // Using YYYY-MM-DD format
+  amount    Float    // Amount in tons
+  remark    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MasterData {
+  id        String   @id @default(uuid())
+  category  String   // e.g., 'MACHINE_SECTION', 'EQUIPMENT_NAME', 'WIRE_TYPE', 'PARTY_NAME'
+  value     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

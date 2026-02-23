@@ -15,10 +15,15 @@ import {
     Edit,
     Trash2
 } from 'lucide-react';
-import { currentMachineSections } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { RecordModal } from '@/components/layout/RecordModal';
+
+interface MasterDataItem {
+    category: string;
+    value: string;
+    isActive: boolean;
+}
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -45,6 +50,23 @@ export default function WireRecordDetail() {
     const [copied, setCopied] = React.useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
+    const [masterDataSections, setMasterDataSections] = React.useState<string[]>([]);
+    const [masterDataWireTypes, setMasterDataWireTypes] = React.useState<string[]>([]);
+    const [masterDataParties, setMasterDataParties] = React.useState<string[]>([]);
+
+    const fetchMasterData = async () => {
+        try {
+            const res = await fetch('/api/master-data');
+            if (res.ok) {
+                const data: MasterDataItem[] = await res.json();
+                setMasterDataSections(data.filter(item => item.category === 'MACHINE_SECTION' && item.isActive).map(item => item.value));
+                setMasterDataWireTypes(data.filter(item => item.category === 'WIRE_TYPE' && item.isActive).map(item => item.value));
+                setMasterDataParties(data.filter(item => item.category === 'PARTY_NAME' && item.isActive).map(item => item.value));
+            }
+        } catch (error) {
+            console.error('Failed to fetch master data', error);
+        }
+    };
 
     const fetchRecord = async () => {
         setIsLoading(true);
@@ -65,6 +87,7 @@ export default function WireRecordDetail() {
 
     React.useEffect(() => {
         fetchRecord();
+        fetchMasterData();
     }, [id]);
 
     if (isLoading) {
@@ -403,21 +426,21 @@ export default function WireRecordDetail() {
                         label: 'Machine Section',
                         name: 'machineName',
                         type: 'select',
-                        options: currentMachineSections,
+                        options: masterDataSections,
                         defaultValue: record.machineName
                     },
                     {
-                        label: 'Wire Type / Specification',
+                        label: 'Wire Type / Name',
                         name: 'wireType',
-                        type: 'text',
-                        placeholder: 'e.g. Bronze 0.15mm',
+                        type: 'select',
+                        options: masterDataWireTypes,
                         defaultValue: record.wireType
                     },
                     {
-                        label: 'Party Name',
+                        label: 'Party / Vendor Name',
                         name: 'partyName',
-                        type: 'text',
-                        placeholder: 'Supplier name',
+                        type: 'select',
+                        options: masterDataParties,
                         defaultValue: record.partyName
                     },
                     {

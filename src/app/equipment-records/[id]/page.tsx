@@ -17,10 +17,15 @@ import {
     Edit,
     Trash2
 } from 'lucide-react';
-import { currentMachineSections, currentEquipmentNames } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { RecordModal } from '@/components/layout/RecordModal';
+
+interface MasterDataItem {
+    category: string;
+    value: string;
+    isActive: boolean;
+}
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -45,6 +50,21 @@ export default function EquipmentRecordDetail() {
     const [copied, setCopied] = React.useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
+    const [masterDataSections, setMasterDataSections] = React.useState<string[]>([]);
+    const [masterDataEquipment, setMasterDataEquipment] = React.useState<string[]>([]);
+
+    const fetchMasterData = async () => {
+        try {
+            const res = await fetch('/api/master-data');
+            if (res.ok) {
+                const data: MasterDataItem[] = await res.json();
+                setMasterDataSections(data.filter(item => item.category === 'MACHINE_SECTION' && item.isActive).map(item => item.value));
+                setMasterDataEquipment(data.filter(item => item.category === 'EQUIPMENT_NAME' && item.isActive).map(item => item.value));
+            }
+        } catch (error) {
+            console.error('Failed to fetch master data', error);
+        }
+    };
 
     const fetchRecord = async () => {
         setIsLoading(true);
@@ -65,6 +85,7 @@ export default function EquipmentRecordDetail() {
 
     React.useEffect(() => {
         fetchRecord();
+        fetchMasterData();
     }, [id]);
 
     if (isLoading) {
@@ -408,14 +429,14 @@ export default function EquipmentRecordDetail() {
                         label: 'Machine Group / Section',
                         name: 'groupName',
                         type: 'select',
-                        options: currentMachineSections,
+                        options: masterDataSections,
                         defaultValue: record.groupName
                     },
                     {
                         label: 'Equipment / Part Name',
                         name: 'equipmentName',
                         type: 'select',
-                        options: currentEquipmentNames,
+                        options: masterDataEquipment,
                         defaultValue: record.equipmentName
                     },
                     {

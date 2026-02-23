@@ -13,10 +13,15 @@ import {
     RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { currentMachineSections } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { RecordModal } from '@/components/layout/RecordModal';
 import Link from 'next/link';
+
+interface MasterDataItem {
+    category: string;
+    value: string;
+    isActive: boolean;
+}
 
 interface WireRecord {
     id: string;
@@ -45,6 +50,23 @@ export default function WireRecordsPage() {
     // DB state
     const [records, setRecords] = useState<WireRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [masterDataSections, setMasterDataSections] = useState<string[]>([]);
+    const [masterDataWireTypes, setMasterDataWireTypes] = useState<string[]>([]);
+    const [masterDataParties, setMasterDataParties] = useState<string[]>([]);
+
+    const fetchMasterData = async () => {
+        try {
+            const res = await fetch('/api/master-data');
+            if (res.ok) {
+                const data: MasterDataItem[] = await res.json();
+                setMasterDataSections(data.filter(item => item.category === 'MACHINE_SECTION' && item.isActive).map(item => item.value));
+                setMasterDataWireTypes(data.filter(item => item.category === 'WIRE_TYPE' && item.isActive).map(item => item.value));
+                setMasterDataParties(data.filter(item => item.category === 'PARTY_NAME' && item.isActive).map(item => item.value));
+            }
+        } catch (error) {
+            console.error('Failed to fetch master data', error);
+        }
+    };
 
     const fetchRecords = async () => {
         setIsLoading(true);
@@ -64,6 +86,7 @@ export default function WireRecordsPage() {
 
     useEffect(() => {
         fetchRecords();
+        fetchMasterData();
     }, []);
 
     const filteredRecords = records.filter(record => {
@@ -232,7 +255,7 @@ export default function WireRecordsPage() {
                                     className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none"
                                 >
                                     <option value="">All Sections</option>
-                                    {currentMachineSections.map(s => <option key={s} value={s}>{s}</option>)}
+                                    {masterDataSections.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2">
@@ -372,20 +395,22 @@ export default function WireRecordsPage() {
                         label: 'Machine Section',
                         name: 'machineName',
                         type: 'select',
-                        options: currentMachineSections,
+                        options: masterDataSections,
                         placeholder: 'Select Section'
                     },
                     {
                         label: 'Wire Type / Name',
                         name: 'wireType',
-                        type: 'text',
-                        placeholder: 'e.g. HEW-200 Primary'
+                        type: 'select',
+                        options: masterDataWireTypes,
+                        placeholder: 'Select Wire Type'
                     },
                     {
                         label: 'Party / Vendor Name',
                         name: 'partyName',
-                        type: 'text',
-                        placeholder: 'e.g. Apex Vendors'
+                        type: 'select',
+                        options: masterDataParties,
+                        placeholder: 'Select Vendor'
                     },
                     {
                         label: 'Production at Installation (MT)',
