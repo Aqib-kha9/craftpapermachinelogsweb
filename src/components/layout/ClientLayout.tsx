@@ -46,8 +46,8 @@ export function ClientLayout({ children }: ClientLayoutProps) {
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#070708] relative">
                 <Header onMenuClick={() => setIsSidebarOpen(true)} />
-                <main className="flex-1 overflow-y-auto custom-scrollbar border-t border-zinc-200 dark:border-zinc-800/50">
-                    <div className="p-4 max-w-[1600px] mx-auto min-h-full">
+                <main className="flex-1 overflow-auto bg-background p-2 md:p-2 custom-scrollbar relative">
+                    <div className="p-2 max-w-[1600px] mx-auto min-h-full">
                         {children}
                     </div>
                 </main>

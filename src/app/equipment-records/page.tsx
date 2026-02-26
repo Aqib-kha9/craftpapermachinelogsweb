@@ -162,29 +162,29 @@ export default function EquipmentRecordsPage() {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {/* Strategic Protocol Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-purple-600 shadow-[0_0_10px_rgba(168,85,247,0.8)] animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Incohub Module 2: Equipment Logs</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)] animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Incohub Module 2: Equipment Logs</span>
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none uppercase">
+                    <h1 className="text-4xl font-black tracking-tight text-foreground leading-none uppercase">
                         Equipment Records
                     </h1>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button onClick={fetchRecords} disabled={isLoading} className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center">
+                    <button onClick={fetchRecords} disabled={isLoading} className="p-2 border border-border hover:bg-background/80 transition-colors text-zinc-500 flex items-center justify-center">
                         <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
                     </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="btn-premium flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 w-full sm:w-auto"
+                        className="btn-premium flex items-center justify-center gap-3 w-full sm:w-auto"
                     >
                         <Plus size={16} />
                         <span>LOG MAINTENANCE</span>
                     </button>
-                    <button onClick={handleExport} className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center">
+                    <button onClick={handleExport} className="p-2 border border-border hover:bg-background/80 transition-colors text-zinc-500 flex items-center justify-center">
                         <Download size={18} />
                     </button>
                 </div>
@@ -216,7 +216,7 @@ export default function EquipmentRecordsPage() {
                                 {showFilters ? 'Hide Filters' : 'Filters'}
                             </button>
                             <div className="h-6 w-px bg-zinc-200 dark:border-zinc-800 hidden sm:block" />
-                            <span className="hidden sm:inline-flex text-[9px] font-black text-purple-500 uppercase tracking-widest px-2 py-1 bg-purple-500/5 border border-purple-500/10">
+                            <span className="hidden sm:inline-flex text-[9px] font-black text-primary uppercase tracking-widest px-2 py-1 bg-primary/5 border border-primary/10">
                                 {isLoading ? 'SYNCING...' : 'Tracking Active'}
                             </span>
                         </div>
@@ -320,7 +320,7 @@ export default function EquipmentRecordsPage() {
                                     <td className="px-6 py-4 mono text-[11px] font-black text-amber-600 dark:text-amber-500">
                                         {record.downtimeMinutes > 0 ? `${record.downtimeMinutes} min` : '-'}
                                     </td>
-                                    <td className="px-6 py-4 mono text-[11px] font-black text-zinc-900 dark:text-zinc-300">
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-foreground">
                                         {record.totalProduction.toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4 mono text-[10px] text-zinc-500 uppercase">
@@ -372,22 +372,25 @@ export default function EquipmentRecordsPage() {
             </div>
 
             {/* System Intelligence Banner */}
-            <div className="p-6 technical-panel bg-zinc-900 border-none flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="bg-card border border-border p-4 md:p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white/5 flex items-center justify-center text-zinc-400 border border-white/10">
-                        <AlertCircle size={18} />
+                    <div className="w-12 h-12 bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                        <Settings size={24} />
                     </div>
                     <div>
-                        <div className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-1">Downtime Risk: Low</div>
-                        <div className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mono">DB SYNCHRONIZED</div>
+                        <h1 className="text-2xl font-black tracking-tight text-foreground uppercase">EQUIP_SYSTEM_REGISTRY</h1>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-1">Component Maintenance & Parts Lifecycle</p>
                     </div>
                 </div>
-                <div className="hidden lg:flex gap-12">
-                    <div className="text-right">
-                        <div className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">ISO_PROTOCOL</div>
-                        <div className="text-xs font-black text-white mt-1 mono">ST_0842_SEC</div>
-                    </div>
-                </div>
+                <button
+                    onClick={() => {
+                        setIsModalOpen(true);
+                    }}
+                    className="btn-premium"
+                >
+                    <Plus size={16} />
+                    <span>Initialize_New_Part_Log</span>
+                </button>
             </div>
             {/* Data Entry Modal */}
             <RecordModal

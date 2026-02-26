@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface HeaderProps {
     onMenuClick?: () => void;
@@ -111,29 +112,40 @@ export function Header({ onMenuClick }: HeaderProps) {
     }, []);
 
     return (
-        <header className="h-14 shrink-0 bg-white dark:bg-[#070708] border-b border-zinc-200 dark:border-zinc-800/50 z-40 px-4 md:px-8">
+        <header className="h-14 shrink-0 bg-sidebar border-b border-border z-40 px-4 md:px-8">
             <div className="h-full flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={onMenuClick}
-                        className="lg:hidden p-2 -ml-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                        className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <Menu size={20} />
                     </button>
 
-                    <div className="hidden sm:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-600">
-                        <Home size={14} className="hover:text-fuchsia-500 transition-colors cursor-pointer" />
+                    <div className="hidden sm:flex items-center gap-1.5 text-muted-foreground">
+                        <Home size={14} className="hover:text-primary transition-colors cursor-pointer" />
                         <ChevronRight size={12} className="opacity-30" />
                     </div>
                     <nav className="flex items-center gap-2">
+                        <Link href="/" className="lg:hidden mr-2">
+                            <div className="w-8 h-8 rounded bg-transparent flex items-center justify-center overflow-hidden">
+                                <Image
+                                    src="/logo.png"
+                                    alt="Logo"
+                                    width={32}
+                                    height={32}
+                                    className="object-contain"
+                                />
+                            </div>
+                        </Link>
                         {paths.length === 0 ? (
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900 dark:text-zinc-400">Home</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">Home</span>
                         ) : (
                             paths.map((path, i) => (
                                 <React.Fragment key={path}>
                                     <span className={cn(
                                         "text-[10px] font-black uppercase tracking-[0.2em]",
-                                        i === paths.length - 1 ? "text-fuchsia-600 px-1.5 py-0.5 bg-fuchsia-500/5 rounded-[1px]" : "text-zinc-400",
+                                        i === paths.length - 1 ? "text-primary px-1.5 py-0.5 bg-primary/5 rounded-[1px]" : "text-muted-foreground",
                                         i < paths.length - 2 && "hidden md:inline-block"
                                     )}>
                                         {isNaN(Number(path)) ? path.replace('-', ' ') : `Record #${path}`}
@@ -160,12 +172,12 @@ export function Header({ onMenuClick }: HeaderProps) {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onFocus={() => searchQuery.length >= 2 && setIsSearchOpen(true)}
                             placeholder="SEARCH_REGISTRY..."
-                            className="bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/50 rounded-[2px] px-8 py-1.5 text-[9px] font-bold uppercase tracking-widest focus:outline-none focus:border-fuchsia-500/50 transition-all w-48 focus:w-64 focus:bg-white dark:focus:bg-zinc-900 mono"
+                            className="bg-background border border-border rounded-[2px] px-8 py-1.5 text-[9px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all w-48 focus:w-64 focus:bg-card mono"
                         />
 
                         {/* Search Results Dropdown */}
                         {isSearchOpen && (searchResults.length > 0 || searchQuery.length >= 2) && (
-                            <div className="absolute top-[calc(100%+8px)] left-0 w-[320px] bg-white dark:bg-[#0c0c0d] border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-[2px] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="absolute top-[calc(100%+8px)] left-0 w-[320px] bg-card border border-border shadow-2xl rounded-[2px] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                 <div className="p-2 border-b border-zinc-100 dark:border-zinc-800/50 flex justify-between items-center">
                                     <span className="text-[8px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Command_Response_Logs</span>
                                     <span className="text-[8px] font-black text-fuchsia-500 uppercase tracking-tighter">Hits: {searchResults.length}</span>
@@ -253,7 +265,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                                             className="fixed inset-0 z-10"
                                             onClick={() => setIsNotificationsOpen(false)}
                                         />
-                                        <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#0c0c0d] border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-[2px] z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="absolute right-0 mt-3 w-80 bg-card border border-border shadow-2xl rounded-[2px] z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                             <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900/30 border-b border-zinc-100 dark:border-zinc-800/50 flex justify-between items-center">
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-[10px] font-black text-zinc-900 dark:text-zinc-300 uppercase tracking-widest">System_Alert_Feed</div>
@@ -346,7 +358,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                                         className="fixed inset-0 z-10"
                                         onClick={() => setIsProfileOpen(false)}
                                     />
-                                    <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-[#0c0c0d] border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-[2px] z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="absolute right-0 mt-3 w-56 bg-card border border-border shadow-2xl rounded-[2px] z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
                                         <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800/50 mb-1">
                                             <div className="text-[10px] font-black text-zinc-900 dark:text-zinc-300 uppercase tracking-widest">Operator Context</div>
                                             <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight mt-1 mono">ID: INCO_HUB_ADMIN</div>

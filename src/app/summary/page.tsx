@@ -137,13 +137,13 @@ export default function SummaryPage() {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Incohub Executive Dashboard</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)] animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Incohub Executive Dashboard</span>
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none uppercase">
+                    <h1 className="text-4xl font-black tracking-tight text-foreground leading-none uppercase">
                         Monthly Summary
                     </h1>
                 </div>
@@ -152,13 +152,13 @@ export default function SummaryPage() {
                     <button
                         onClick={fetchAllData}
                         disabled={isLoading}
-                        className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center flex-1 md:flex-none"
+                        className="p-2 border border-border hover:bg-background/80 transition-colors text-zinc-500 flex items-center justify-center flex-1 md:flex-none"
                     >
                         <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
                     </button>
-                    <div className="technical-panel px-4 py-2 flex items-center gap-3 bg-zinc-50/50 dark:bg-zinc-900/40">
-                        <CalendarDays size={14} className="text-zinc-400" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-300">
+                    <div className="technical-panel px-4 py-2 flex items-center gap-3">
+                        <CalendarDays size={14} className="text-zinc-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-foreground">
                             {isLoading ? 'SYNCING_REGISTRY' : 'FEBRUARY 2024'}
                         </span>
                     </div>
@@ -168,26 +168,26 @@ export default function SummaryPage() {
             {/* KPI Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-8">
                 {metrics.map((metric, i) => (
-                    <div key={i} className="technical-panel p-5 bg-white/50 dark:bg-zinc-950/20 backdrop-blur-xl group hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-default flex flex-col justify-between overflow-hidden relative">
+                    <div key={i} className="technical-panel p-5 group hover:border-primary transition-all cursor-default flex flex-col justify-between overflow-hidden relative">
                         {isLoading && (
                             <div className="absolute inset-0 bg-white/40 dark:bg-zinc-950/40 backdrop-blur-[2px] z-10 animate-pulse flex items-center justify-center">
                                 <Activity size={12} className="text-zinc-400 animate-bounce" />
                             </div>
                         )}
                         <div className="flex justify-between items-start mb-6">
-                            <div className="p-2 bg-zinc-50 dark:bg-zinc-900 rounded-[2px] border border-zinc-100 dark:border-zinc-800/50 group-hover:scale-110 transition-transform">
-                                {metric.icon}
+                            <div className="p-2 bg-background rounded-[2px] border border-border group-hover:scale-110 transition-transform">
+                                {React.cloneElement(metric.icon as React.ReactElement<any>, { className: "text-zinc-500 group-hover:text-primary transition-colors" })}
                             </div>
-                            <span className="text-[7px] font-black tracking-[0.3em] text-zinc-300 dark:text-zinc-800 uppercase">
+                            <span className="text-[7px] font-black tracking-[0.3em] text-zinc-500 uppercase">
                                 KPI_0{i + 1}
                             </span>
                         </div>
                         <div>
-                            <div className={`text-4xl lg:text-5xl font-black mono mb-1 tracking-tighter ${metric.colorClass}`}>
+                            <div className={cn("text-4xl lg:text-5xl font-black mono mb-1 tracking-tighter text-foreground group-hover:text-primary transition-colors")}>
                                 {metric.value}
                             </div>
                             <div className="flex items-end justify-between">
-                                <div className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400">
+                                <div className="text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                                     {metric.title}
                                 </div>
                                 <div className="text-[8px] font-black text-zinc-300 dark:text-zinc-700">{metric.unit}</div>

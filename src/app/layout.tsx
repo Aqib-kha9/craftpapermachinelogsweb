@@ -23,6 +23,7 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
+          themes={['light', 'dark', 'crimson', 'crimson-light', 'midnight', 'midnight-light', 'ocean', 'ocean-light', 'amber', 'amber-light']}
           enableSystem
           disableTransitionOnChange
         >

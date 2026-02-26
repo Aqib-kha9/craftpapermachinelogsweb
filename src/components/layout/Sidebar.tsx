@@ -12,10 +12,14 @@ import {
     ChevronRight,
     PieChart,
     LogOut,
-    Database
+    Database,
+    FileSpreadsheet,
+    ExternalLink, // Added ExternalLink
+    Menu, // Consolidated from separate import
+    X // Consolidated from separate import
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Menu, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface SidebarProps {
     isOpen?: boolean;
@@ -38,6 +42,18 @@ const sidebarItems = [
         href: '/stock-history',
         icon: ClipboardList,
         description: 'Production & Dispatch Logs'
+    },
+    {
+        name: 'Bulk Import',
+        href: '/bulk-import',
+        icon: FileSpreadsheet,
+        description: 'Fast Data Entry'
+    },
+    {
+        name: 'External Sheets',
+        href: '/sheets',
+        icon: ExternalLink,
+        description: 'Custom Shortcuts'
     },
     {
         name: 'Wire Records',
@@ -88,19 +104,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             )}
 
             <aside className={cn(
-                "fixed inset-y-0 left-0 w-64 lg:w-16 bg-white dark:bg-[#070708] border-r border-zinc-200 dark:border-zinc-800/50 z-50 transition-transform duration-300 lg:translate-x-0 lg:static lg:block",
+                "fixed inset-y-0 left-0 w-64 lg:w-16 bg-sidebar border-r border-border z-50 transition-transform duration-300 lg:translate-x-0 lg:static lg:block",
                 isOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="flex flex-col h-full py-8 gap-8 lg:gap-12">
+                <div className="flex flex-col h-full py-2 gap-2 lg:gap-2">
                     {/* Brand / Logo */}
                     <div className="flex items-center gap-4 px-6 lg:px-0 lg:justify-center lg:mb-0">
-                        <div className="w-10 h-10 rounded bg-zinc-900 dark:bg-white flex items-center justify-center text-white dark:text-zinc-900 shadow-xl shrink-0">
-                            <ClipboardList size={20} />
-                        </div>
-                        <div className="lg:hidden">
-                            <div className="text-[12px] font-black uppercase tracking-widest text-zinc-900 dark:text-white">Incohub</div>
-                            <div className="text-[8px] font-bold text-zinc-400 uppercase tracking-tighter">Machine Records</div>
-                        </div>
+                        <Link href="/" className="lg:justify-center flex items-center gap-4">
+                            <div className="w-10 h-10 rounded bg-transparent flex items-center justify-center shrink-0 overflow-hidden">
+                                <Image
+                                    src="/logo.png"
+                                    alt="Incohub Logo"
+                                    width={40}
+                                    height={40}
+                                    className="object-contain"
+                                />
+                            </div>
+                            <div className="lg:hidden">
+                                <div className="text-[12px] font-black uppercase tracking-widest text-foreground">Incohub</div>
+                                <div className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">Machine Records</div>
+                            </div>
+                        </Link>
 
                         <button onClick={onClose} className="lg:hidden ml-auto p-1 text-zinc-400">
                             <X size={20} />
@@ -120,8 +144,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     className={cn(
                                         "flex items-center gap-4 p-3 lg:p-0 lg:w-10 lg:h-10 lg:justify-center rounded transition-all duration-300 relative group",
                                         isActive
-                                            ? "text-fuchsia-600 dark:text-fuchsia-400 bg-fuchsia-500/5"
-                                            : "text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                                            ? "text-primary bg-primary/5"
+                                            : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
                                     <Icon size={20} className={cn("shrink-0 transition-transform duration-300", isActive && "scale-110")} />
@@ -131,27 +155,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     </span>
 
                                     {/* Desktop Tooltip */}
-                                    <div className="hidden lg:block absolute left-[calc(100%+12px)] px-3 py-1.5 bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-2xl">
+                                    <div className="hidden lg:block absolute left-[calc(100%+12px)] px-3 py-1.5 bg-sidebar-foreground text-sidebar text-[10px] font-black uppercase tracking-widest rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-2xl">
                                         {item.name}
-                                        <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-zinc-900 rotate-45 -z-10" />
+                                        <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-sidebar-foreground rotate-45 -z-10" />
                                     </div>
 
                                     {isActive && (
-                                        <div className="absolute left-0 lg:-left-px top-1/2 -translate-y-1/2 w-[3px] lg:w-[2px] h-6 bg-fuchsia-600 shadow-[0_0_10px_rgba(192,38,211,0.8)]" />
+                                        <div className="absolute left-0 lg:-left-px top-1/2 -translate-y-1/2 w-[3px] lg:w-[2px] h-6 bg-primary shadow-[0_0_10px_var(--primary)]" />
                                     )}
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    <div className="mt-auto pb-8 flex flex-col items-center gap-8 px-6 lg:px-0">
+                    <div className="mt-auto pb-4 flex flex-col items-center gap-6 px-6 lg:px-0">
                         <div className="relative h-24 hidden lg:flex items-center">
                             <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-300 dark:text-zinc-700">
                                 INCO<span className="text-zinc-500">_HUB</span>
                             </span>
                         </div>
 
-                        <div className="w-full lg:w-1.5 h-1 lg:h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)] animate-pulse" />
 
                         <ThemeToggle minimal />
                     </div>

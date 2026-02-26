@@ -166,19 +166,19 @@ export default function WireRecordsPage() {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {/* Module Protocol Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-600 shadow-[0_0_10px_rgba(192,38,211,0.8)] animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">Incohub Module 1: Production</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)] animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Incohub Module 1: Production</span>
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none">
+                    <h1 className="text-4xl font-black tracking-tight text-foreground leading-none">
                         WIRE SYSTEMS
                     </h1>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button onClick={fetchRecords} disabled={isLoading} className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center">
+                    <button onClick={fetchRecords} disabled={isLoading} className="p-2 border border-border hover:bg-background/80 transition-colors text-zinc-500 flex items-center justify-center">
                         <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
                     </button>
                     <button
@@ -188,7 +188,7 @@ export default function WireRecordsPage() {
                         <Plus size={16} />
                         <span>ADD NEW ENTRY</span>
                     </button>
-                    <button onClick={handleExport} className="p-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-zinc-500 flex items-center justify-center">
+                    <button onClick={handleExport} className="p-2 border border-border hover:bg-background/80 transition-colors text-zinc-500 flex items-center justify-center">
                         <Download size={18} />
                     </button>
                 </div>
@@ -202,9 +202,9 @@ export default function WireRecordsPage() {
                     { label: 'Active Wires', value: records.filter(r => !r.productionAtRemoval).length, unit: 'UNITS', highlight: true },
                     { label: 'System Source', value: isLoading ? 'SYNCING' : 'NEON', unit: 'DB' },
                 ].map((stat, i) => (
-                    <div key={i} className="technical-panel p-5 bg-zinc-50/30 dark:bg-zinc-900/10">
+                    <div key={i} className="technical-panel p-5">
                         <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] mb-2">{stat.label}</div>
-                        <div className={cn("text-2xl font-black mono flex items-baseline gap-1", stat.highlight ? "text-fuchsia-600" : "text-zinc-900 dark:text-white")}>
+                        <div className={cn("text-2xl font-black mono flex items-baseline gap-1", stat.highlight ? "text-primary" : "text-foreground")}>
                             {stat.value}
                             <span className="text-[10px] font-black opacity-40">{stat.unit}</span>
                         </div>
@@ -223,7 +223,7 @@ export default function WireRecordsPage() {
                                 placeholder="SEARCH WIRE NAME OR PARTY..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-zinc-100/50 dark:bg-zinc-900/50 border border-transparent focus:border-fuchsia-500/30 rounded-[1px] px-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none transition-all mono"
+                                className="w-full bg-background border border-border focus:border-primary/30 rounded-[1px] px-8 py-2 text-[10px] font-bold uppercase tracking-widest focus:outline-none transition-all mono text-foreground"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -252,7 +252,7 @@ export default function WireRecordsPage() {
                                 <select
                                     value={sectionFilter}
                                     onChange={(e) => setSectionFilter(e.target.value)}
-                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none"
+                                    className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-[10px] font-bold text-foreground uppercase tracking-wider focus:outline-none focus:border-primary"
                                 >
                                     <option value="">All Sections</option>
                                     {masterDataSections.map(s => <option key={s} value={s}>{s}</option>)}
@@ -264,7 +264,7 @@ export default function WireRecordsPage() {
                                     type="date"
                                     value={dateRange.start}
                                     onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none mono"
+                                    className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-[10px] font-bold text-foreground uppercase tracking-wider focus:outline-none focus:border-primary mono"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -273,7 +273,7 @@ export default function WireRecordsPage() {
                                     type="date"
                                     value={dateRange.end}
                                     onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1px] px-3 py-2 text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider focus:outline-none mono"
+                                    className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-[10px] font-bold text-foreground uppercase tracking-wider focus:outline-none focus:border-primary mono"
                                 />
                             </div>
                         </div>
@@ -322,19 +322,19 @@ export default function WireRecordsPage() {
                                         </Link>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-[10px] font-black text-fuchsia-600 dark:text-fuchsia-400 py-0.5 border-b border-fuchsia-600/20">
+                                        <span className="text-[10px] font-black text-primary py-0.5 border-b border-primary/20">
                                             {record.wireType.toUpperCase()}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest leading-tight">
+                                        <span className="text-[10px] font-bold text-foreground uppercase tracking-widest leading-tight">
                                             {record.partyName}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 mono text-[11px] font-black text-zinc-700 dark:text-zinc-400">
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-foreground">
                                         {record.productionAtInstallation.toLocaleString()}
                                     </td>
-                                    <td className="px-6 py-4 mono text-[11px] font-black text-zinc-700 dark:text-zinc-400">
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-foreground">
                                         {record.productionAtRemoval ? record.productionAtRemoval.toLocaleString() : '-'}
                                     </td>
                                     <td className="px-6 py-4 mono text-[11px] font-black text-emerald-600 dark:text-emerald-500">

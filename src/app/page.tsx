@@ -163,10 +163,10 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-600 shadow-[0_0_10px_rgba(192,38,211,0.8)] animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)] animate-pulse" />
             <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 dark:text-zinc-600">Incohub Maintenance System</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-white leading-none">
@@ -190,7 +190,7 @@ export default function Dashboard() {
       <div className="space-y-4">
 
         {/* Secondary Header for Section */}
-        <div className="flex items-center justify-between pb-2 border-b border-zinc-200/50 dark:border-zinc-800/30">
+        <div className="flex items-center justify-between pb-2 border-b border-border/30">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Live Telemetry</span>
           </div>
@@ -203,71 +203,77 @@ export default function Dashboard() {
         </div>
 
         {/* KPI Command Center */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          <div className="technical-panel p-5 flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-900/20 col-span-1">
-            <div className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3">Today<br />Production</div>
-            <div className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">{todayProduction} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span></div>
-          </div>
-
-          <div className="technical-panel p-5 flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-900/20 col-span-1">
-            <div className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3">Today<br />Dispatch</div>
-            <div className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">{todayDispatch} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span></div>
-          </div>
-
-          <div className="technical-panel p-5 flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-900/20 col-span-1">
-            <div className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3">Month<br />Production</div>
-            <div className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">{monthProduction} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span></div>
-          </div>
-
-          <div className="technical-panel p-5 flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-900/20 col-span-1">
-            <div className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3">Month<br />Dispatch</div>
-            <div className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">{monthDispatch} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span></div>
-          </div>
-
-          <Link href="/stock-history" className="technical-panel p-5 flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-900/20 col-span-2 md:col-span-3 lg:col-span-1 group hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors cursor-pointer">
-            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white mb-3 flex justify-between items-start">
-              <span>Current<br />Stock</span>
-              <Database size={14} className="text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+          <div className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors">
+            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2">
+              <Activity size={14} className="text-emerald-500" />
+              Today Production
             </div>
-            <div className="text-4xl lg:text-3xl xl:text-4xl font-black text-zinc-900 dark:text-white tracking-tighter tabular-nums drop-shadow-sm group-hover:scale-[1.02] transition-transform origin-left">
-              {currentStock} <span className="text-[10px] opacity-70 uppercase tracking-widest font-bold text-zinc-500">MT</span>
+            <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums group-hover:text-emerald-500 transition-colors">
+              {Number(todayProduction.toFixed(2))} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span>
+            </div>
+          </div>
+
+          <div className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors">
+            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2">
+              <Truck size={14} className="text-blue-500" />
+              Today Dispatch
+            </div>
+            <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums group-hover:text-blue-500 transition-colors">
+              {Number(todayDispatch.toFixed(2))} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span>
+            </div>
+          </div>
+
+          <Link href="/stock-history" className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors cursor-pointer bg-zinc-50 dark:bg-zinc-900/40 relative overflow-hidden">
+            <div className="absolute right-0 bottom-0 opacity-[0.03] text-primary group-hover:scale-110 group-hover:-translate-y-2 group-hover:-translate-x-2 transition-transform duration-500 z-0">
+              <Database size={100} />
+            </div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white mb-3 flex justify-between items-start relative z-10">
+              <div className="flex items-center gap-2">
+                <Database size={14} className="text-primary" />
+                Total Stock In Hand
+              </div>
+              <ArrowRight size={14} className="text-zinc-400 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter tabular-nums drop-shadow-sm group-hover:text-primary transition-colors relative z-10">
+              {Number(currentStock.toFixed(2))} <span className="text-[12px] opacity-70 uppercase tracking-widest font-bold text-zinc-500">MT</span>
             </div>
           </Link>
         </div>
 
         {/* Quick Entry Action Bars */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <form onSubmit={submitProduction} className="technical-panel p-1 bg-zinc-50/50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center gap-2 group transition-colors">
-            <div className="flex items-center gap-3 px-4 py-3 sm:py-0 min-w-[140px] w-full sm:w-auto border-b sm:border-b-0 sm:border-r border-zinc-200 dark:border-zinc-800">
+          <form onSubmit={submitProduction} className="technical-panel p-1 flex flex-col sm:flex-row items-center gap-2 group transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 sm:py-0 min-w-[140px] w-full sm:w-auto border-b sm:border-b-0 sm:border-r border-border">
               <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em] whitespace-nowrap">Log Production</span>
             </div>
 
             <div className="flex-grow flex items-center gap-2 px-2 py-2 sm:py-0 w-full">
               <input type="date" value={prodDate} onChange={e => setProdDate(e.target.value)} required
-                className="flex-1 min-w-[120px] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-3 py-2 text-xs font-medium focus:outline-none focus:border-zinc-500 transition-colors text-zinc-900 dark:text-white" />
+                className="flex-1 min-w-[120px] bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors text-foreground" />
               <input type="number" step="0.01" value={prodAmount} onChange={e => setProdAmount(e.target.value)} placeholder="0.00 MT" required
-                className="w-24 sm:w-32 flex-shrink-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-3 py-2 text-xs font-medium focus:outline-none focus:border-zinc-500 transition-colors font-mono text-zinc-900 dark:text-white" />
+                className="w-24 sm:w-32 flex-shrink-0 bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors font-mono text-foreground" />
             </div>
 
-            <button type="submit" disabled={isSubmittingProd} className="w-full sm:w-auto bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-widest px-6 py-3 transition-colors duration-300 disabled:opacity-50 whitespace-nowrap m-1">
+            <button type="submit" disabled={isSubmittingProd} className="w-full sm:w-auto btn-premium m-1">
               {isSubmittingProd ? 'Saving...' : 'Add Record'}
             </button>
           </form>
 
-          <form onSubmit={submitDispatch} className="technical-panel p-1 bg-zinc-50/50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center gap-2 group transition-colors">
-            <div className="flex items-center gap-3 px-4 py-3 sm:py-0 min-w-[140px] w-full sm:w-auto border-b sm:border-b-0 sm:border-r border-zinc-200 dark:border-zinc-800">
-              <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em] whitespace-nowrap">Log Dispatch</span>
+          <form onSubmit={submitDispatch} className="technical-panel p-1 flex flex-col sm:flex-row items-center gap-2 group transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 sm:py-0 min-w-[140px] w-full sm:w-auto border-b sm:border-b-0 sm:border-r border-border">
+              <span className="text-[10px] font-black text-foreground uppercase tracking-[0.2em] whitespace-nowrap">Log Dispatch</span>
             </div>
 
             <div className="flex-grow flex items-center gap-2 px-2 py-2 sm:py-0 w-full">
               <input type="date" value={dispDate} onChange={e => setDispDate(e.target.value)} required
-                className="flex-1 min-w-[120px] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-3 py-2 text-xs font-medium focus:outline-none focus:border-zinc-500 transition-colors text-zinc-900 dark:text-white" />
+                className="flex-1 min-w-[120px] bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors text-foreground" />
               <input type="number" step="0.01" value={dispAmount} onChange={e => setDispAmount(e.target.value)} placeholder="0.00 MT" required
-                className="w-24 sm:w-32 flex-shrink-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-3 py-2 text-xs font-medium focus:outline-none focus:border-zinc-500 transition-colors font-mono text-zinc-900 dark:text-white" />
+                className="w-24 sm:w-32 flex-shrink-0 bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors font-mono text-foreground" />
             </div>
 
-            <button type="submit" disabled={isSubmittingDisp} className="w-full sm:w-auto bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-widest px-6 py-3 transition-colors duration-300 disabled:opacity-50 whitespace-nowrap m-1">
+            <button type="submit" disabled={isSubmittingDisp} className="w-full sm:w-auto btn-premium m-1">
               {isSubmittingDisp ? 'Saving...' : 'Add Record'}
             </button>
           </form>
@@ -280,7 +286,7 @@ export default function Dashboard() {
         {/* Primary Module */}
         <div className="md:col-span-8">
           <Link href="/wire-records" className="block group h-full">
-            <div className="technical-panel p-6 md:p-10 bg-zinc-50/50 dark:bg-zinc-900/20 group-hover:border-fuchsia-500/50 transition-colors relative overflow-hidden h-full">
+            <div className="technical-panel p-6 md:p-10 group-hover:border-primary/50 transition-colors relative overflow-hidden h-full">
 
               <div className="absolute right-0 top-0 w-32 h-32 opacity-[0.03] text-fuchsia-500 transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-700">
                 <Layers size={128} />
@@ -288,7 +294,7 @@ export default function Dashboard() {
 
               <div className="flex justify-between items-start mb-16 relative z-10">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-zinc-900 dark:bg-white flex items-center justify-center text-white dark:text-zinc-900">
+                  <div className="w-10 h-10 bg-primary flex items-center justify-center text-primary-foreground">
                     <Layers size={20} />
                   </div>
                   <div>
@@ -296,7 +302,7 @@ export default function Dashboard() {
                     <div className="text-[9px] font-medium text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">Maintenance Ledgers</div>
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center group-hover:bg-fuchsia-600 group-hover:border-fuchsia-600 group-hover:text-white transition-all duration-300">
+                <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground transition-all duration-300">
                   <ArrowRight size={16} />
                 </div>
               </div>
@@ -309,7 +315,7 @@ export default function Dashboard() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-6 pt-6 border-t border-zinc-200/50 dark:border-zinc-800/20">
+                <div className="flex items-center gap-6 pt-6 border-t border-border/20">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Database Active</span>
@@ -323,10 +329,10 @@ export default function Dashboard() {
         {/* Support Modules */}
         <div className="md:col-span-4 flex flex-col gap-4">
           <Link href="/equipment-records" className="group flex-1">
-            <div className="technical-panel h-full p-8 group-hover:border-zinc-900 dark:group-hover:border-white transition-colors flex flex-col justify-between">
+            <div className="technical-panel h-full p-8 group-hover:border-primary transition-colors flex flex-col justify-between">
 
               <div className="flex justify-between items-center mb-10">
-                <Settings size={18} className="text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+                <Settings size={18} className="text-zinc-400 group-hover:text-primary transition-colors" />
                 <span className="text-[9px] font-black text-zinc-300 dark:text-zinc-800 tracking-[0.3em]">MOD-2</span>
               </div>
               <div>
@@ -337,10 +343,10 @@ export default function Dashboard() {
           </Link>
 
           <Link href="/history" className="group flex-1">
-            <div className="technical-panel h-full p-8 group-hover:border-zinc-900 dark:group-hover:border-white transition-colors flex flex-col justify-between">
+            <div className="technical-panel h-full p-8 group-hover:border-primary transition-colors flex flex-col justify-between">
 
               <div className="flex justify-between items-center mb-10">
-                <HistoryIcon size={18} className="text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+                <HistoryIcon size={18} className="text-zinc-400 group-hover:text-primary transition-colors" />
                 <span className="text-[9px] font-black text-zinc-300 dark:text-zinc-800 tracking-[0.3em]">MOD-3</span>
               </div>
               <div>
@@ -353,22 +359,22 @@ export default function Dashboard() {
       </div>
 
       {/* Status Footer */}
-      <div className="py-4 px-6 border border-zinc-200 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden mt-6">
+      <div className="py-4 px-6 border border-border bg-card flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden mt-6">
         {isLoading && (
-          <div className="absolute inset-x-0 bottom-0 h-[2px] bg-fuchsia-500/20 animate-pulse">
-            <div className="h-full bg-fuchsia-600 w-1/3 animate-[loading_1.5s_infinite_ease-in-out]" />
+          <div className="absolute inset-x-0 bottom-0 h-[2px] bg-primary/20 animate-pulse">
+            <div className="h-full bg-primary w-1/3 animate-[loading_1.5s_infinite_ease-in-out]" />
           </div>
         )}
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Total Logs:</span>
-            <span className="text-[10px] font-black text-zinc-900 dark:text-white mono bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-[1px] border border-zinc-200 dark:border-zinc-700">
+            <span className="text-[10px] font-black text-foreground mono bg-background px-2 py-0.5 rounded-[1px] border border-border">
               {isLoading ? '...' : totalLogsCount.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest sm:block hidden">Last Update:</span>
-            <span className="text-[10px] font-black text-zinc-900 dark:text-white mono sm:block hidden">
+            <span className="text-[10px] font-black text-foreground mono sm:block hidden">
               {isLoading ? 'SYNCING...' : lastUpdate}
             </span>
           </div>

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @source "../**/*.{js,ts,jsx,tsx,mdx}";
 
-@variant dark (&:where(.dark, .dark *));
+@variant dark (&:where(.dark, .dark *, .crimson, .crimson *, .midnight, .midnight *, .ocean, .ocean *, .amber, .amber *));
 
 :root {
   --background: #ffffff;
@@ -10,25 +10,183 @@
   --primary-foreground: #ffffff;
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
   --border: #e4e4e7;
   --sidebar: #ffffff;
   --sidebar-foreground: #09090b;
   --card: #ffffff;
   --card-foreground: #09090b;
+  color-scheme: light;
 }
 
-.dark {
+.dark, .crimson, .midnight, .ocean, .amber {
   --background: #09090b;
   --foreground: #f4f4f5;
   --primary: #d946ef;
   --primary-foreground: #09090b;
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
   --border: #27272a;
   --sidebar: #000000;
   --sidebar-foreground: #f4f4f5;
   --card: #09090b;
   --card-foreground: #f4f4f5;
+  color-scheme: dark;
+}
+
+.crimson {
+  --background: #0c0a0a;
+  --foreground: #fff1f2;
+  --primary: #e11d48;
+  --primary-foreground: #fff1f2;
+  --secondary: #1a080c;
+  --secondary-foreground: #fda4af;
+  --muted: #1a080c;
+  --muted-foreground: #9f1239;
+  --accent: #1a080c;
+  --accent-foreground: #fda4af;
+  --border: #2a1216;
+  --sidebar: #0c0a0a;
+  --sidebar-foreground: #fff1f2;
+  --card: #141111;
+  --card-foreground: #fff1f2;
+}
+
+.crimson-light {
+  --background: #fffafa;
+  --foreground: #450a0a;
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+  --secondary: #fee2e2;
+  --secondary-foreground: #991b1b;
+  --muted: #fef2f2;
+  --muted-foreground: #ef4444;
+  --accent: #fee2e2;
+  --accent-foreground: #991b1b;
+  --border: #fecaca;
+  --sidebar: #fffafa;
+  --sidebar-foreground: #450a0a;
+  --card: #ffffff;
+  --card-foreground: #450a0a;
+  color-scheme: light;
+}
+
+.midnight {
+  --background: #0a0a0c;
+  --foreground: #f5f3ff;
+  --primary: #8b5cf6;
+  --primary-foreground: #f5f3ff;
+  --secondary: #15142a;
+  --secondary-foreground: #c4b5fd;
+  --muted: #15142a;
+  --muted-foreground: #7c3aed;
+  --accent: #15142a;
+  --accent-foreground: #c4b5fd;
+  --border: #1e1b3a;
+  --sidebar: #0a0a0c;
+  --sidebar-foreground: #f5f3ff;
+  --card: #121218;
+  --card-foreground: #f5f3ff;
+}
+
+.midnight-light {
+  --background: #fafaff;
+  --foreground: #2e1065;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: #ede9fe;
+  --secondary-foreground: #5b21b6;
+  --muted: #f5f3ff;
+  --muted-foreground: #7c3aed;
+  --accent: #ede9fe;
+  --accent-foreground: #5b21b6;
+  --border: #ddd6fe;
+  --sidebar: #fafaff;
+  --sidebar-foreground: #2e1065;
+  --card: #ffffff;
+  --card-foreground: #2e1065;
+  color-scheme: light;
+}
+
+.ocean {
+  --background: #080a0a;
+  --foreground: #ecfeff;
+  --primary: #06b6d4;
+  --primary-foreground: #ecfeff;
+  --secondary: #0c1a1e;
+  --secondary-foreground: #67e8f9;
+  --muted: #0c1a1e;
+  --muted-foreground: #0891b2;
+  --accent: #0c1a1e;
+  --accent-foreground: #67e8f9;
+  --border: #162a2e;
+  --sidebar: #080a0a;
+  --sidebar-foreground: #ecfeff;
+  --card: #101414;
+  --card-foreground: #ecfeff;
+}
+
+.ocean-light {
+  --background: #fafdff;
+  --foreground: #083344;
+  --primary: #06b6d4;
+  --primary-foreground: #ffffff;
+  --secondary: #ecfeff;
+  --secondary-foreground: #0e7490;
+  --muted: #f0f9ff;
+  --muted-foreground: #0891b2;
+  --accent: #ecfeff;
+  --accent-foreground: #0e7490;
+  --border: #cffafe;
+  --sidebar: #fafdff;
+  --sidebar-foreground: #083344;
+  --card: #ffffff;
+  --card-foreground: #083344;
+  color-scheme: light;
+}
+
+.amber {
+  --background: #0c0b08;
+  --foreground: #fffbeb;
+  --primary: #f59e0b;
+  --primary-foreground: #fffbeb;
+  --secondary: #1e150c;
+  --secondary-foreground: #fcd34d;
+  --muted: #1e150c;
+  --muted-foreground: #d97706;
+  --accent: #1e150c;
+  --accent-foreground: #fcd34d;
+  --border: #2a1e12;
+  --sidebar: #0c0b08;
+  --sidebar-foreground: #fffbeb;
+  --card: #14120f;
+  --card-foreground: #fffbeb;
+}
+
+.amber-light {
+  --background: #fffdfa;
+  --foreground: #451a03;
+  --primary: #f59e0b;
+  --primary-foreground: #ffffff;
+  --secondary: #fef3c7;
+  --secondary-foreground: #92400e;
+  --muted: #fffbeb;
+  --muted-foreground: #d97706;
+  --accent: #fef3c7;
+  --accent-foreground: #92400e;
+  --border: #fde68a;
+  --sidebar: #fffdfa;
+  --sidebar-foreground: #451a03;
+  --card: #ffffff;
+  --card-foreground: #451a03;
+  color-scheme: light;
 }
 
 @theme {
@@ -38,6 +196,10 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -76,44 +238,47 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background-image: 
-    linear-gradient(to right, var(--border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
-  opacity: 0.15;
-  z-index: -1;
+  background-image:
+    linear-gradient(to right, var(--primary) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--primary) 1px, transparent 1px);
+  background-size: 50px 50px;
+  mask-image: radial-gradient(circle at center, black, transparent 90%);
+  opacity: 0.03;
   pointer-events: none;
+  z-index: 0;
 }
 
-.dark body::before {
+:where(.dark, .crimson, .midnight, .ocean, .amber) body::before {
   opacity: 0.05;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
 @layer components {
   .technical-panel {
-    background: var(--background);
+    background: var(--card);
     border: 1px solid var(--border);
     position: relative;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.1);
   }
 
   .technical-panel::after {
     content: "";
     position: absolute;
     top: -1px;
-    left: 20px;
-    right: 20px;
+    left: 15%;
+    right: 15%;
     height: 1px;
     background: linear-gradient(to right, transparent, var(--primary), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
+    opacity: 0.3;
   }
 
   .technical-panel:hover::after {
-    opacity: 0.5;
+    opacity: 1;
+    left: 5%;
+    right: 5%;
+    transition: all 0.5s ease;
   }
 
   .btn-premium {
@@ -124,56 +289,35 @@ body::before {
     gap: 0.5rem;
     padding: 0.5rem 1.25rem;
     background: var(--primary);
-    color: white;
+    color: var(--primary-foreground);
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    border-radius: 2px; /* Precision corner */
-    cursor: pointer !important;
-  }
-
-  .btn-premium-secondary {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1.25rem;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--foreground);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     border-radius: 2px;
     cursor: pointer !important;
   }
 
   .btn-premium:hover {
-    filter: brightness(1.1);
-    box-shadow: 0 0 15px rgba(192, 38, 211, 0.3);
+    filter: brightness(1.2);
+    box-shadow: 0 0 20px -2px var(--primary);
+    transform: translateY(-1px);
   }
 
   .card-premium {
-    background: var(--background);
+    background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 4px; /* Minimal technical radius */
+    border-radius: 4px;
     transition: all 0.3s ease;
     overflow: hidden;
   }
 
-  .dark .card-premium {
-    background: rgba(9, 9, 11, 0.8);
-  }
-
   .card-premium:hover {
     border-color: var(--primary);
-    box-shadow: inset 0 0 20px rgba(192, 38, 211, 0.02);
+    box-shadow: inset 0 0 30px -5px var(--primary);
+    opacity: 0.05;
   }
 
   .text-gradient {
