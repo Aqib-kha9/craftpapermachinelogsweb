@@ -5,7 +5,7 @@ import { Database, FileSpreadsheet, AlertTriangle, CheckCircle2, Calculator, Upl
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
-type ImportType = 'PRODUCTION_DISPATCH' | 'WIRE_RECORDS' | 'EQUIPMENT_RECORDS';
+type ImportType = 'PRODUCTION_DISPATCH' | 'PRODUCTION_ONLY' | 'DISPATCH_ONLY' | 'STOCK_ONLY' | 'WIRE_RECORDS' | 'EQUIPMENT_RECORDS';
 
 interface TemplateDef {
     id: ImportType;
@@ -18,10 +18,31 @@ interface TemplateDef {
 const TEMPLATES: Record<ImportType, TemplateDef> = {
     PRODUCTION_DISPATCH: {
         id: 'PRODUCTION_DISPATCH',
-        name: 'Production & Dispatch',
+        name: 'Production & Dispatch (Combined)',
         description: 'First column: Date (DD/MM/YYYY), Second: Daily Production, Third: Daily Dispatch.',
         columns: ['date', 'production', 'dispatch'],
         placeholder: "DATE\tDaily Production\tDaily Dispatch\n01/11/2025\t148393\t170042\n02/11/2025\t149030\t118366"
+    },
+    PRODUCTION_ONLY: {
+        id: 'PRODUCTION_ONLY',
+        name: 'Daily Production (Only)',
+        description: 'First column: Date (DD/MM/YYYY), Second: Production Amount (MT).',
+        columns: ['date', 'production'],
+        placeholder: "DATE\tProduction\n01/11/2025\t148393\n02/11/2025\t149030"
+    },
+    DISPATCH_ONLY: {
+        id: 'DISPATCH_ONLY',
+        name: 'Daily Dispatch (Only)',
+        description: 'First column: Date (DD/MM/YYYY), Second: Dispatch Amount (MT).',
+        columns: ['date', 'dispatch'],
+        placeholder: "DATE\tDispatch\n01/11/2025\t170042\n02/11/2025\t118366"
+    },
+    STOCK_ONLY: {
+        id: 'STOCK_ONLY',
+        name: 'Daily Stock In Hand (Only)',
+        description: 'First column: Date (DD/MM/YYYY), Second: Stock Amount (MT).',
+        columns: ['date', 'stock'],
+        placeholder: "DATE\tStock Amount\n01/11/2025\t3450\n02/11/2025\t3200"
     },
     WIRE_RECORDS: {
         id: 'WIRE_RECORDS',
@@ -76,13 +97,20 @@ export default function BulkImportPage() {
     };
 
     const validateRecord = (type: ImportType, record: ParsedRecord): boolean => {
-        if (type === 'PRODUCTION_DISPATCH') {
+        if (type === 'PRODUCTION_DISPATCH' || type === 'PRODUCTION_ONLY' || type === 'DISPATCH_ONLY' || type === 'STOCK_ONLY') {
             const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(record.date || '');
             const p = record.production;
             const d = record.dispatch;
+            const s = record.stock;
             const isValidProd = p === '' || p === undefined || !isNaN(parseFloat(p));
             const isValidDisp = d === '' || d === undefined || !isNaN(parseFloat(d));
-            return isValidDate && (isValidProd || isValidDisp) && !!(p || d);
+            const isValidStock = s === '' || s === undefined || !isNaN(parseFloat(s));
+
+            if (type === 'PRODUCTION_ONLY') return isValidDate && !!p && !isNaN(parseFloat(p));
+            if (type === 'DISPATCH_ONLY') return isValidDate && !!d && !isNaN(parseFloat(d));
+            if (type === 'STOCK_ONLY') return isValidDate && !!s && !isNaN(parseFloat(s));
+
+            return isValidDate && (isValidProd || isValidDisp || isValidStock) && !!(p || d || s);
         }
 
         if (type === 'WIRE_RECORDS') {
@@ -244,8 +272,8 @@ export default function BulkImportPage() {
                 setSaveResult({
                     success: true,
                     msg: data.message || 'Data imported successfully!',
-                    count1: data.prodCount || data.importCount,
-                    count2: data.dispCount
+                    count1: data.prodCount || data.importCount || data.stockCount,
+                    count2: data.dispCount || data.stockCount
                 });
 
                 document.dispatchEvent(new Event('sync_telemetry'));

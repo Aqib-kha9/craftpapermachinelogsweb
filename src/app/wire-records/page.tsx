@@ -32,6 +32,7 @@ interface WireRecord {
     productionAtRemoval: number | null;
     wireLifeMT: number | null;
     expectedLifeMT: number | null;
+    wireCost: number | null;
     changeDate: string;
     remark: string | null;
 }
@@ -150,6 +151,7 @@ export default function WireRecordsPage() {
                     partyName: data.partyName,
                     productionAtInstallation: data.productionAtInstallation,
                     productionAtRemoval: data.productionAtRemoval,
+                    wireCost: data.wireCost,
                     changeDate: data.changeDate,
                     remark: data.remark || ""
                 })
@@ -292,7 +294,7 @@ export default function WireRecordsPage() {
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Removal (MT)</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em]">Life (MT)</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Date</th>
-                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Remark</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em]">Cost</th>
                                 <th className="px-6 py-4 text-center text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Status</th>
                             </tr>
                         </thead>
@@ -345,10 +347,8 @@ export default function WireRecordsPage() {
                                     <td className="px-6 py-4 mono text-[10px] text-zinc-500 uppercase">
                                         {record.changeDate.replace(/-/g, '.')}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest leading-tight line-clamp-1 max-w-[150px]">
-                                            {record.remark || 'N/A'}
-                                        </div>
+                                    <td className="px-6 py-4 mono text-[11px] font-black text-emerald-600 dark:text-emerald-500">
+                                        {record.wireCost ? record.wireCost.toLocaleString() : '--'}
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex items-center justify-center gap-1.5">
@@ -423,6 +423,12 @@ export default function WireRecordsPage() {
                         name: 'productionAtRemoval',
                         type: 'number',
                         placeholder: 'Leave blank if currently active'
+                    },
+                    {
+                        label: 'Wire Cost (Optional)',
+                        name: 'wireCost',
+                        type: 'number',
+                        placeholder: 'Enter wire cost'
                     },
                     {
                         label: 'Change Date',

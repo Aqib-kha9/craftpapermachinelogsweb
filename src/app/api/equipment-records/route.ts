@@ -24,6 +24,10 @@ export async function POST(request: Request) {
         totalProduction: Number(body.totalProduction),
         changeDate: body.changeDate,
         productionImpact: body.productionImpact,
+        downtimeCategory: body.downtimeCategory,
+        maintenanceCost: body.maintenanceCost ? Number(body.maintenanceCost) : null,
+        sparePartUsed: body.sparePartUsed,
+        technicianName: body.technicianName,
         remark: body.remark,
       },
     });

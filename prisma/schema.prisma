@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,6 +16,7 @@ model WireRecord {
   productionAtRemoval      Int?
   wireLifeMT               Int?
   expectedLifeMT           Int?
+  wireCost                 Float?
   changeDate               String
   remark                   String?
   createdAt                DateTime @default(now())
@@ -32,7 +30,11 @@ model EquipmentRecord {
   downtimeMinutes  Int
   totalProduction  Int
   changeDate       String
-  productionImpact String   
+  productionImpact String
+  downtimeCategory String?
+  maintenanceCost  Float?
+  sparePartUsed    String?
+  technicianName   String?
   remark           String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -40,7 +42,7 @@ model EquipmentRecord {
 
 model Notification {
   id        String   @id @default(uuid())
-  type      String   // 'INFO', 'SUCCESS', 'WARNING', 'ALERT'
+  type      String
   title     String
   message   String
   isRead    Boolean  @default(false)
@@ -49,8 +51,8 @@ model Notification {
 
 model ProductionRecord {
   id        String   @id @default(uuid())
-  date      String   // Using YYYY-MM-DD format to match existing records
-  amount    Float    // Amount in tons
+  date      String
+  amount    Float
   remark    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -58,8 +60,17 @@ model ProductionRecord {
 
 model DispatchRecord {
   id        String   @id @default(uuid())
-  date      String   // Using YYYY-MM-DD format
-  amount    Float    // Amount in tons
+  date      String
+  amount    Float
+  remark    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockRecord {
+  id        String   @id @default(uuid())
+  date      String
+  amount    Float
   remark    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -67,10 +78,17 @@ model DispatchRecord {
 
 model MasterData {
   id        String   @id @default(uuid())
-  category  String   // e.g., 'MACHINE_SECTION', 'EQUIPMENT_NAME', 'WIRE_TYPE', 'PARTY_NAME'
+  category  String
   value     String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
   updatedAt DateTime @updatedAt
 }
 

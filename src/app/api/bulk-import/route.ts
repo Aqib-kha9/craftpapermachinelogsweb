@@ -13,28 +13,49 @@ export async function POST(request: Request) {
 
     let results;
     switch (importType) {
-        case 'PRODUCTION_DISPATCH': {
+        case 'PRODUCTION_DISPATCH':
+        case 'PRODUCTION_ONLY':
+        case 'DISPATCH_ONLY':
+        case 'STOCK_ONLY': {
           const prodData = [];
           const dispData = [];
+          const stockData = [];
           
           for (const record of records) {
-            const { date, production, dispatch, remark } = record;
+            const { date, production, dispatch, stock, remark } = record;
             if (!date) continue;
 
             if (production !== undefined && production !== null && production !== '') {
-              prodData.push({
-                date,
-                amount: parseFloat(production),
-                remark: remark || null,
-              });
+              const val = parseFloat(production);
+              if (!isNaN(val)) {
+                prodData.push({
+                  date,
+                  amount: val,
+                  remark: remark || null,
+                });
+              }
             }
 
             if (dispatch !== undefined && dispatch !== null && dispatch !== '') {
-              dispData.push({
-                date,
-                amount: parseFloat(dispatch),
-                remark: remark || null,
-              });
+              const val = parseFloat(dispatch);
+              if (!isNaN(val)) {
+                dispData.push({
+                  date,
+                  amount: val,
+                  remark: remark || null,
+                });
+              }
+            }
+
+            if (stock !== undefined && stock !== null && stock !== '') {
+              const val = parseFloat(stock);
+              if (!isNaN(val)) {
+                stockData.push({
+                  date,
+                  amount: val,
+                  remark: remark || null,
+                });
+              }
             }
           }
           
@@ -45,8 +66,16 @@ export async function POST(request: Request) {
           if (dispData.length > 0) {
              await prisma.dispatchRecord.createMany({ data: dispData });
           }
+          if (stockData.length > 0) {
+             await prisma.stockRecord.createMany({ data: stockData });
+          }
           
-          results = { message: 'Production & Dispatch data imported', prodCount: prodData.length, dispCount: dispData.length };
+          results = { 
+            message: 'Data imported successfully', 
+            prodCount: prodData.length, 
+            dispCount: dispData.length,
+            stockCount: stockData.length 
+          };
           break;
         }
         case 'WIRE_RECORDS': {
@@ -58,18 +87,23 @@ export async function POST(request: Request) {
             let wireLifeMT = null;
             const pInst = parseInt(installProd, 10);
             const pRem = removalProd ? parseInt(removalProd, 10) : null;
+            
+            if (isNaN(pInst)) continue;
+
             if (pInst && pRem && !isNaN(pInst) && !isNaN(pRem)) {
                  wireLifeMT = pRem - pInst;
             }
+
+            const expLife = expectedLife ? parseInt(expectedLife, 10) : null;
 
             wireData.push({
               machineName,
               wireType,
               partyName,
-              productionAtInstallation: parseInt(installProd, 10),
+              productionAtInstallation: pInst,
               productionAtRemoval: pRem,
               wireLifeMT: wireLifeMT,
-              expectedLifeMT: expectedLife ? parseInt(expectedLife, 10) : null,
+              expectedLifeMT: isNaN(expLife as any) ? null : expLife,
               changeDate,
               remark: remark || null,
             });
@@ -88,11 +122,16 @@ export async function POST(request: Request) {
              const { groupName, equipmentName, downtimeMinutes, totalProduction, changeDate, productionImpact, remark } = record;
              if (!groupName || !equipmentName || !downtimeMinutes || !totalProduction || !changeDate || !productionImpact) continue;
 
+             const dMin = parseInt(downtimeMinutes, 10);
+             const tProd = parseInt(totalProduction, 10);
+
+             if (isNaN(dMin) || isNaN(tProd)) continue;
+
              equipData.push({
                  groupName,
                  equipmentName,
-                 downtimeMinutes: parseInt(downtimeMinutes, 10),
-                 totalProduction: parseInt(totalProduction, 10),
+                 downtimeMinutes: dMin,
+                 totalProduction: tProd,
                  changeDate,
                  productionImpact,
                  remark: remark || null,

@@ -12,7 +12,8 @@ import {
     AlertCircle,
     CheckCircle2,
     Info,
-    RefreshCw
+    RefreshCw,
+    ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,10 @@ interface EquipmentRecord {
     totalProduction: number;
     changeDate: string;
     productionImpact: 'Yes' | 'No' | 'Remark';
+    downtimeCategory?: string | null;
+    maintenanceCost?: number | null;
+    sparePartUsed?: string | null;
+    technicianName?: string | null;
     remark: string | null;
 }
 
@@ -147,6 +152,10 @@ export default function EquipmentRecordsPage() {
                     downtimeMinutes: data.downtimeMinutes ? Number(data.downtimeMinutes) : 0,
                     totalProduction: data.totalProduction,
                     changeDate: data.changeDate,
+                    downtimeCategory: data.downtimeCategory,
+                    maintenanceCost: data.maintenanceCost,
+                    sparePartUsed: data.sparePartUsed,
+                    technicianName: data.technicianName,
                     remark: data.remark || ""
                 })
             });
@@ -266,10 +275,9 @@ export default function EquipmentRecordsPage() {
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Machine Group / Section</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Equipment / Part Name</th>
                                 <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Impact</th>
-                                <th className="px-6 py-4 text-[9px] font-black text-amber-500 uppercase tracking-[0.3em]">Downtime</th>
-                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Production (MT)</th>
-                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Date</th>
-                                <th className="px-6 py-4 text-center text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Remark</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Details</th>
+                                <th className="px-6 py-4 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Tech</th>
+                                <th className="px-6 py-4 text-right text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em]">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/50 font-medium">
@@ -312,24 +320,29 @@ export default function EquipmentRecordsPage() {
                                             record.productionImpact === 'No' && "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20",
                                             record.productionImpact === 'Remark' && "bg-amber-500/10 text-amber-600 border border-amber-500/20"
                                         )}>
-                                            {record.productionImpact === 'Yes' && 'Critical Impact'}
-                                            {record.productionImpact === 'No' && 'No Downtime'}
-                                            {record.productionImpact === 'Remark' && 'Needs Sync'}
+                                            {record.productionImpact}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 mono text-[11px] font-black text-amber-600 dark:text-amber-500">
-                                        {record.downtimeMinutes > 0 ? `${record.downtimeMinutes} min` : '-'}
-                                    </td>
-                                    <td className="px-6 py-4 mono text-[11px] font-black text-foreground">
-                                        {record.totalProduction.toLocaleString()}
-                                    </td>
-                                    <td className="px-6 py-4 mono text-[10px] text-zinc-500 uppercase">
-                                        {record.changeDate.replace(/-/g, '.')}
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest line-clamp-1">
-                                            {record.remark || 'N/A'}
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            {record.downtimeCategory && (
+                                                <div className="text-[9px] font-bold text-zinc-500 uppercase">CAT: {record.downtimeCategory}</div>
+                                            )}
+                                            {record.maintenanceCost && (
+                                                <div className="text-[9px] font-black text-emerald-500 uppercase">COST: {record.maintenanceCost.toLocaleString()}</div>
+                                            )}
+                                            {record.sparePartUsed && (
+                                                <div className="text-[9px] font-bold text-amber-600 uppercase truncate max-w-[120px]">PART: {record.sparePartUsed}</div>
+                                            )}
                                         </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-[10px] font-black uppercase whitespace-nowrap">
+                                        {record.technicianName || '--'}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <Link href={`/equipment-records/${record.id}`} className="inline-flex items-center justify-center w-8 h-8 border border-border hover:border-primary hover:text-primary transition-colors">
+                                            <ArrowRight size={14} />
+                                        </Link>
                                     </td>
                                 </tr>
                             ))}
@@ -441,6 +454,30 @@ export default function EquipmentRecordsPage() {
                         name: 'remark',
                         type: 'textarea',
                         placeholder: 'Reason for change'
+                    },
+                    {
+                        label: 'Downtime Category',
+                        name: 'downtimeCategory',
+                        type: 'text',
+                        placeholder: 'e.g., Mechanical, Electrical, Operational'
+                    },
+                    {
+                        label: 'Maintenance Cost (Optional)',
+                        name: 'maintenanceCost',
+                        type: 'number',
+                        placeholder: 'Enter cost'
+                    },
+                    {
+                        label: 'Spare Part Used',
+                        name: 'sparePartUsed',
+                        type: 'text',
+                        placeholder: 'Part name/ID'
+                    },
+                    {
+                        label: 'Technician Name',
+                        name: 'technicianName',
+                        type: 'text',
+                        placeholder: 'Name of the technician'
                     },
                 ]}
                 onSubmit={handleAddRecord}

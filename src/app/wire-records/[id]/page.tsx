@@ -36,6 +36,7 @@ interface WireRecord {
     productionAtRemoval: number | null;
     wireLifeMT: number | null;
     expectedLifeMT: number | null;
+    wireCost: number | null;
     changeDate: string;
     remark: string | null;
 }
@@ -366,6 +367,16 @@ export default function WireRecordDetail() {
                                         {record.changeDate.replace('-', '.')}
                                     </div>
                                 </div>
+                                {record.wireCost !== null && (
+                                    <div>
+                                        <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                                            <Database size={10} /> Wire_Cost
+                                        </div>
+                                        <div className="text-xl font-black text-emerald-500 mono uppercase tracking-tight">
+                                            {record.wireCost.toLocaleString()} <span className="text-[10px] ml-1">COST</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -469,6 +480,13 @@ export default function WireRecordDetail() {
                         type: 'textarea',
                         placeholder: 'Any special observations',
                         defaultValue: record.remark
+                    },
+                    {
+                        label: 'Wire Cost (Optional)',
+                        name: 'wireCost',
+                        type: 'number',
+                        placeholder: 'Enter wire cost',
+                        defaultValue: record.wireCost
                     },
                 ]}
                 onSubmit={handleEdit}

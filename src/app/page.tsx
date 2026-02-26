@@ -16,7 +16,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Truck,
-  Database
+  Database,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
@@ -49,37 +50,50 @@ export default function Dashboard() {
   const [equipmentData, setEquipmentData] = React.useState<EquipmentRecord[]>([]);
   const [productionData, setProductionData] = React.useState<ProductionRecord[]>([]);
   const [dispatchData, setDispatchData] = React.useState<DispatchRecord[]>([]);
+  const [stockData, setStockData] = React.useState<any[]>([]);
+  const [systemConfigs, setSystemConfigs] = React.useState<{ key: string, value: string }[]>([]);
 
   const [prodDate, setProdDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [prodAmount, setProdAmount] = React.useState('');
   const [dispDate, setDispDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [dispAmount, setDispAmount] = React.useState('');
+  const [stockDate, setStockDate] = React.useState(new Date().toISOString().split('T')[0]);
+  const [stockAmount, setStockAmount] = React.useState('');
   const [isSubmittingProd, setIsSubmittingProd] = React.useState(false);
   const [isSubmittingDisp, setIsSubmittingDisp] = React.useState(false);
+  const [isSubmittingStock, setIsSubmittingStock] = React.useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = React.useState(false);
 
   const [isLoading, setIsLoading] = React.useState(true);
 
   const fetchStats = async () => {
     setIsLoading(true);
     try {
-      const [wireRes, equipRes, prodRes, dispRes] = await Promise.all([
+      const [wireRes, equipRes, prodRes, dispRes, stockRes] = await Promise.all([
         fetch('/api/wire-records'),
         fetch('/api/equipment-records'),
         fetch('/api/production'),
-        fetch('/api/dispatch')
+        fetch('/api/dispatch'),
+        fetch('/api/stock')
       ]);
 
-      if (wireRes.ok && equipRes.ok && prodRes.ok && dispRes.ok) {
-        const [wires, equips, prods, disps] = await Promise.all([
+      if (wireRes.ok && equipRes.ok && prodRes.ok && dispRes.ok && stockRes.ok) {
+        const [wires, equips, prods, disps, stocks] = await Promise.all([
           wireRes.json(),
           equipRes.json(),
           prodRes.json(),
-          dispRes.json()
+          dispRes.json(),
+          stockRes.json()
         ]);
         setWireData(wires);
         setEquipmentData(equips);
         setProductionData(prods);
         setDispatchData(disps);
+        setStockData(stocks);
+        const configsRes = await fetch('/api/system/config');
+        if (configsRes.ok) {
+          setSystemConfigs(await configsRes.json());
+        }
       }
     } catch (error) {
       console.error("Failed to fetch dashboard stats", error);
@@ -130,6 +144,45 @@ export default function Dashboard() {
     }
   };
 
+  const submitStock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stockDate || !stockAmount) return;
+    setIsSubmittingStock(true);
+    try {
+      const res = await fetch('/api/stock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: stockDate, amount: stockAmount })
+      });
+      if (res.ok) {
+        setStockAmount('');
+        fetchStats();
+      }
+    } catch (error) {
+      console.error('Failed to submit stock:', error);
+    } finally {
+      setIsSubmittingStock(false);
+    }
+  };
+
+  const updateMachineStatus = async (newStatus: string) => {
+    setIsUpdatingStatus(true);
+    try {
+      const res = await fetch('/api/system/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'machineStatus', value: newStatus })
+      });
+      if (res.ok) {
+        fetchStats();
+      }
+    } catch (error) {
+      console.error('Failed to update machine status:', error);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   React.useEffect(() => {
     fetchStats();
   }, []);
@@ -158,7 +211,13 @@ export default function Dashboard() {
 
   const totalProduction = productionData.reduce((sum, p) => sum + p.amount, 0);
   const totalDispatch = dispatchData.reduce((sum, d) => sum + d.amount, 0);
-  const currentStock = totalProduction - totalDispatch;
+  const currentStock = stockData.length > 0 ? stockData[0].amount : 0;
+
+  const machineStatus = systemConfigs.find(c => c.key === 'machineStatus')?.value || 'OFFLINE';
+  const todayDowntime = (equipmentData as any[]).filter(e => e.changeDate === today).reduce((sum, e) => sum + (e.downtimeMinutes || 0), 0);
+  const activeWire = (wireData as any[]).sort((a, b) => new Date(b.changeDate).getTime() - new Date(a.changeDate).getTime()).find(w => !w.productionAtRemoval);
+  const lastWireChange = (wireData as any[]).length > 0 ? (wireData as any[]).sort((a, b) => new Date(b.changeDate).getTime() - new Date(a.changeDate).getTime())[0].changeDate : '--';
+  const lowStockThreshold = 50; // MT
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
@@ -203,15 +262,63 @@ export default function Dashboard() {
         </div>
 
         {/* KPI Command Center */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+
+          <div className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors">
+            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2">
+              <Zap size={14} className={cn(machineStatus === 'RUNNING' ? "text-emerald-500" : machineStatus === 'STOP' ? "text-red-500" : "text-amber-500")} />
+              Machine Status
+            </div>
+            <div className={cn("text-2xl font-black tracking-tight uppercase mb-4", machineStatus === 'RUNNING' ? "text-emerald-500" : machineStatus === 'STOP' ? "text-red-500" : "text-amber-500")}>
+              {machineStatus}
+            </div>
+            <div className="flex gap-1">
+              {['RUNNING', 'STOP', 'MT'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => updateMachineStatus(s)}
+                  disabled={isUpdatingStatus}
+                  className={cn(
+                    "px-2 py-1 text-[8px] font-black border transition-all",
+                    machineStatus === s
+                      ? "bg-zinc-900 text-white dark:bg-white dark:text-black border-transparent shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+                      : "border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-zinc-600"
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors">
+            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2">
+              <Clock size={14} className="text-amber-500" />
+              Today Downtime
+            </div>
+            <div className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">
+              {todayDowntime} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MINS</span>
+            </div>
+          </div>
+
+          <div className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors">
+            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2">
+              <Layers size={14} className="text-fuchsia-500" />
+              Active Wire
+            </div>
+            <div className="text-[12px] font-black text-zinc-900 dark:text-white uppercase truncate">
+              {activeWire ? `${activeWire.wireType} (${activeWire.machineName})` : 'NO_ACTIVE_WIRE'}
+            </div>
+            <div className="text-[9px] text-zinc-500 mt-1 uppercase">Last Change: {lastWireChange.replace(/-/g, '.')}</div>
+          </div>
 
           <div className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors">
             <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2">
               <Activity size={14} className="text-emerald-500" />
-              Today Production
+              Today Prod
             </div>
-            <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums group-hover:text-emerald-500 transition-colors">
-              {Number(todayProduction.toFixed(2))} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span>
+            <div className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">
+              {todayProduction.toFixed(1)} <span className="text-[10px] text-zinc-500 uppercase font-bold">MT</span>
             </div>
           </div>
 
@@ -220,61 +327,116 @@ export default function Dashboard() {
               <Truck size={14} className="text-blue-500" />
               Today Dispatch
             </div>
-            <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums group-hover:text-blue-500 transition-colors">
-              {Number(todayDispatch.toFixed(2))} <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">MT</span>
+            <div className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">
+              {todayDispatch.toFixed(1)} <span className="text-[10px] text-zinc-500 uppercase font-bold">MT</span>
             </div>
           </div>
 
-          <Link href="/stock-history" className="technical-panel p-6 flex flex-col justify-between group hover:border-primary transition-colors cursor-pointer bg-zinc-50 dark:bg-zinc-900/40 relative overflow-hidden">
-            <div className="absolute right-0 bottom-0 opacity-[0.03] text-primary group-hover:scale-110 group-hover:-translate-y-2 group-hover:-translate-x-2 transition-transform duration-500 z-0">
-              <Database size={100} />
-            </div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white mb-3 flex justify-between items-start relative z-10">
+          <div className={cn(
+            "technical-panel p-6 flex flex-col justify-between group transition-colors relative overflow-hidden",
+            currentStock < lowStockThreshold ? "border-red-500 bg-red-500/5 animate-pulse" : "hover:border-primary"
+          )}>
+            <div className="text-[10px] font-black uppercase tracking-widest mb-3 flex justify-between items-start relative z-10 text-zinc-400">
               <div className="flex items-center gap-2">
-                <Database size={14} className="text-primary" />
-                Total Stock In Hand
+                <Database size={14} className={currentStock < lowStockThreshold ? "text-red-500" : "text-primary"} />
+                Stock In Hand
               </div>
-              <ArrowRight size={14} className="text-zinc-400 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+              {currentStock < lowStockThreshold && (
+                <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-black animate-bounce">LOW</span>
+              )}
             </div>
-            <div className="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter tabular-nums drop-shadow-sm group-hover:text-primary transition-colors relative z-10">
-              {Number(currentStock.toFixed(2))} <span className="text-[12px] opacity-70 uppercase tracking-widest font-bold text-zinc-500">MT</span>
+            <div className="flex flex-col gap-2 relative z-10">
+              <div className={cn("text-3xl font-black tracking-tighter tabular-nums", currentStock < lowStockThreshold ? "text-red-500" : "text-zinc-900 dark:text-white")}>
+                {currentStock.toLocaleString()} <span className="text-[10px] opacity-70 uppercase font-bold">MT</span>
+              </div>
+
+              {/* Visual Stock Level Indicator */}
+              <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full transition-all duration-1000 ease-out", currentStock < lowStockThreshold ? "bg-red-500" : "bg-primary")}
+                  style={{ width: `${Math.min((currentStock / 500) * 100, 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center text-[7px] font-black uppercase tracking-widest text-zinc-400">
+                <span>0 MT</span>
+                <span>Target: 500 MT</span>
+              </div>
             </div>
-          </Link>
+          </div>
         </div>
 
         {/* Quick Entry Action Bars */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <form onSubmit={submitProduction} className="technical-panel p-1 flex flex-col sm:flex-row items-center gap-2 group transition-colors">
-            <div className="flex items-center gap-3 px-4 py-3 sm:py-0 min-w-[140px] w-full sm:w-auto border-b sm:border-b-0 sm:border-r border-border">
-              <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em] whitespace-nowrap">Log Production</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <form onSubmit={submitProduction} className="technical-panel p-4 flex flex-col gap-4 group transition-colors">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em]">Log Production</span>
+              <Activity size={14} className="text-emerald-500" />
             </div>
 
-            <div className="flex-grow flex items-center gap-2 px-2 py-2 sm:py-0 w-full">
-              <input type="date" value={prodDate} onChange={e => setProdDate(e.target.value)} required
-                className="flex-1 min-w-[120px] bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors text-foreground" />
-              <input type="number" step="0.01" value={prodAmount} onChange={e => setProdAmount(e.target.value)} placeholder="0.00 MT" required
-                className="w-24 sm:w-32 flex-shrink-0 bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors font-mono text-foreground" />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-zinc-500 uppercase">Date</label>
+                <input type="date" value={prodDate} onChange={e => setProdDate(e.target.value)} required
+                  className="w-full bg-background border border-border px-2 py-1.5 text-xs font-medium focus:outline-none focus:border-primary transition-colors text-foreground" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-zinc-500 uppercase">Amount (MT)</label>
+                <input type="number" step="0.01" value={prodAmount} onChange={e => setProdAmount(e.target.value)} placeholder="0.00" required
+                  className="w-full bg-background border border-border px-2 py-1.5 text-xs font-medium focus:outline-none focus:border-primary transition-colors font-mono text-foreground" />
+              </div>
             </div>
 
-            <button type="submit" disabled={isSubmittingProd} className="w-full sm:w-auto btn-premium m-1">
-              {isSubmittingProd ? 'Saving...' : 'Add Record'}
+            <button type="submit" disabled={isSubmittingProd} className="btn-premium w-full py-2 text-[10px]">
+              {isSubmittingProd ? 'Saving...' : 'Add Production Record'}
             </button>
           </form>
 
-          <form onSubmit={submitDispatch} className="technical-panel p-1 flex flex-col sm:flex-row items-center gap-2 group transition-colors">
-            <div className="flex items-center gap-3 px-4 py-3 sm:py-0 min-w-[140px] w-full sm:w-auto border-b sm:border-b-0 sm:border-r border-border">
-              <span className="text-[10px] font-black text-foreground uppercase tracking-[0.2em] whitespace-nowrap">Log Dispatch</span>
+          <form onSubmit={submitDispatch} className="technical-panel p-4 flex flex-col gap-4 group transition-colors">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em]">Log Dispatch</span>
+              <Truck size={14} className="text-blue-500" />
             </div>
 
-            <div className="flex-grow flex items-center gap-2 px-2 py-2 sm:py-0 w-full">
-              <input type="date" value={dispDate} onChange={e => setDispDate(e.target.value)} required
-                className="flex-1 min-w-[120px] bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors text-foreground" />
-              <input type="number" step="0.01" value={dispAmount} onChange={e => setDispAmount(e.target.value)} placeholder="0.00 MT" required
-                className="w-24 sm:w-32 flex-shrink-0 bg-background border border-border px-3 py-2 text-xs font-medium focus:outline-none focus:border-primary transition-colors font-mono text-foreground" />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-zinc-500 uppercase">Date</label>
+                <input type="date" value={dispDate} onChange={e => setDispDate(e.target.value)} required
+                  className="w-full bg-background border border-border px-2 py-1.5 text-xs font-medium focus:outline-none focus:border-primary transition-colors text-foreground" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-zinc-500 uppercase">Amount (MT)</label>
+                <input type="number" step="0.01" value={dispAmount} onChange={e => setDispAmount(e.target.value)} placeholder="0.00" required
+                  className="w-full bg-background border border-border px-2 py-1.5 text-xs font-medium focus:outline-none focus:border-primary transition-colors font-mono text-foreground" />
+              </div>
             </div>
 
-            <button type="submit" disabled={isSubmittingDisp} className="w-full sm:w-auto btn-premium m-1">
-              {isSubmittingDisp ? 'Saving...' : 'Add Record'}
+            <button type="submit" disabled={isSubmittingDisp} className="btn-premium w-full py-2 text-[10px]">
+              {isSubmittingDisp ? 'Saving...' : 'Add Dispatch Record'}
+            </button>
+          </form>
+
+          {/* New Stock Entry Bar */}
+          <form onSubmit={submitStock} className="technical-panel p-4 flex flex-col gap-4 group transition-colors border-primary/30 md:col-span-2 xl:col-span-1">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Log Closing Stock</span>
+              <Database size={14} className="text-primary" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-zinc-500 uppercase">Closing Date</label>
+                <input type="date" value={stockDate} onChange={e => setStockDate(e.target.value)} required
+                  className="w-full bg-background border border-border px-2 py-1.5 text-xs font-medium focus:outline-none focus:border-primary transition-colors text-foreground" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-zinc-500 uppercase">Stock (MT)</label>
+                <input type="number" step="0.01" value={stockAmount} onChange={e => setStockAmount(e.target.value)} placeholder="0.00" required
+                  className="w-full bg-background border border-border px-2 py-1.5 text-xs font-medium focus:outline-none focus:border-primary transition-colors font-mono text-foreground" />
+              </div>
+            </div>
+
+            <button type="submit" disabled={isSubmittingStock} className="btn-premium w-full py-2 text-[10px] !bg-primary !text-primary-foreground shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+              {isSubmittingStock ? 'Saving...' : 'Update Closing Stock'}
             </button>
           </form>
         </div>
