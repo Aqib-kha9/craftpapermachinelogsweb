@@ -96,7 +96,7 @@ export default function Dashboard() {
         }
       }
     } catch (error) {
-      console.error("Failed to fetch dashboard stats", error);
+      // In production, we'd use a proper error reporting service here
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +117,7 @@ export default function Dashboard() {
         fetchStats();
       }
     } catch (error) {
-      console.error('Failed to submit production:', error);
+      // Handle production logging appropriately
     } finally {
       setIsSubmittingProd(false);
     }
@@ -138,7 +138,7 @@ export default function Dashboard() {
         fetchStats();
       }
     } catch (error) {
-      console.error('Failed to submit dispatch:', error);
+      // Production error handling logic goes here
     } finally {
       setIsSubmittingDisp(false);
     }

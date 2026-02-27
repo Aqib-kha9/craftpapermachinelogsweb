@@ -8,9 +8,8 @@ export async function GET() {
     });
     return NextResponse.json(records);
   } catch (error) {
-    console.error('Failed to fetch dispatch records:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch dispatch records' },
+      { error: 'Database error while fetching dispatch records' },
       { status: 500 }
     );
   }
@@ -38,9 +37,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
-    console.error('Failed to create dispatch record:', error);
     return NextResponse.json(
-      { error: 'Failed to create dispatch record' },
+      { error: 'Database error while creating dispatch record' },
       { status: 500 }
     );
   }

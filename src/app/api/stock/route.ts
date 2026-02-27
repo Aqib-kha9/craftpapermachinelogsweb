@@ -8,8 +8,7 @@ export async function GET() {
     });
     return NextResponse.json(records);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Failed to fetch stock records' }, { status: 500 });
+    return NextResponse.json({ error: 'Database error while fetching stock records' }, { status: 500 });
   }
 }
 
@@ -32,7 +31,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Failed to create stock record' }, { status: 500 });
+    return NextResponse.json({ error: 'Database error while creating stock record' }, { status: 500 });
   }
 }

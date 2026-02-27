@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Incohub Maintenance Management System
 
-## Getting Started
+A professional grade Maintenance and Production Registry built for Craft Paper Manufacturing Units.
 
-First, run the development server:
+## 🚀 Getting Started
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Prerequisites
+- Node.js 18+
+- PostgreSQL Database
+- Git
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd craftpaperrecordmachine
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Environment Setup**
+   Copy `.env.example` to `.env` and fill in your client-specific credentials.
+   ```bash
+   cp .env.example .env
+   ```
+   Provide your `DATABASE_URL` in the following format:
+   `postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public`
 
-To learn more about Next.js, take a look at the following resources:
+4. **Database Initialization**
+   Run the following commands to set up the schema and seed initial data.
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   npx prisma db seed
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. **Start Application**
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Production Deployment
 
-## Deploy on Vercel
+For production environments, follow these steps:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Build the application**
+   ```bash
+   npm run build
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Start production server**
+   ```bash
+   npm start
+   ```
+
+3. **CI/CD Recommendation**
+   - Connect the GitHub repository to Vercel or your preferred VPS provider.
+   - Ensure the `DATABASE_URL` environment variable is securely configured in your deployment platform's dashboard.
+
+## 📁 Project Structure
+
+- `src/app`: Next.js App Router (Pages & API Routes)
+- `src/components`: Reusable UI components
+- `prisma`: Database schema and migrations
+- `public`: Static assets
+
+## ⚖️ License
+This software is provided to the client for their internal manufacturing operations.
